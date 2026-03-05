@@ -1,8 +1,83 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿
+@{
+    ViewData["Title"] = "ValueInsight";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<section class="vi-hero vi-hero--premium">
+    <div class="vi-hero__bg">
+        <div class="vi-glow vi-glow--a"></div>
+        <div class="vi-glow vi-glow--b"></div>
+        <div class="vi-grid"></div>
+    </div>
+
+    <div class="container position-relative py-5">
+        <div class="row align-items-center g-5">
+
+            <!-- LEFT -->
+            <div class="col-lg-6 text-white">
+                <div class="vi-badge">
+                    <span class="vi-badge__dot"></span>
+                    Value mapping for leaders & teams
+                </div>
+
+                <h1 class="vi-title mt-3">
+                    Understand your values -
+                    <span class="vi-accent">lead with clarity</span>
+                </h1>
+
+                <p class="vi-lead mt-4">
+                    ValueInsight helps individuals and teams identify their core values, turning reflection into practical insights that strengthen communication, decision-making, and collaboration.
+                </p>
+
+                <div class="d-flex flex-wrap align-items-center gap-3 mt-4">
+                    <a class="btn vi-btn-primary btn-lg"
+                       asp-controller="Home"
+                       asp-action="Start">
+                        Start Value Mapping
+                        <span class="vi-arrow">→</span>
+                    </a>
+                                        
+                </div>
+
+                <!-- Trusted INSIDE HERO -->
+                <div class="vi-trusted mt-4">
+                    <div class="vi-trusted-title">Trusted to support:</div>
+                    <div class="vi-trusted-pills">
+                        <span class="vi-trusted-pill">✨ Self-Insight</span>
+                        <span class="vi-trusted-pill">🤝 Collaboration</span>
+                        <span class="vi-trusted-pill">📈 Leadership Growth</span>
+                        <span class="vi-trusted-pill">🎯 Focus & Results</span>
+                    </div>
+                </div>
+                                
+            </div>
+
+            <!-- RIGHT -->
+            <div class="col-lg-6">
+                <div class="vi-card-glass">
+                    <div class="vi-card-glass__top">
+                        <div class="vi-card-icon">🧭</div>
+                        <div>
+                            <div class="vi-card-title">Why it matters</div>
+                            <div class="vi-card-subtitle">Turn values into clarity and action</div>
+                        </div>
+                    </div>
+
+                    <ul class="vi-checklist mt-4">
+                        <li><span class="vi-check">✓</span> Clear decision-making</li>
+                        <li><span class="vi-check">✓</span> Stronger communication</li>
+                        <li><span class="vi-check">✓</span> Aligned teams & leadership</li>
+                        <li><span class="vi-check">✓</span> Foundation for growth</li>
+                    </ul>
+
+                    <div class="vi-card-glass__divider"></div>
+
+                    <div class="vi-card-note">
+                        ValueInsight helps structure reflection and supports coaching conversations.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
