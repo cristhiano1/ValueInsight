@@ -1,12 +1,21 @@
-﻿namespace ValueInsight.Backend.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ValueInsight.Backend.Models
 {
     public class Value
     {
         public int Id { get; set; }
 
-        public string Name { get; set; } = string.Empty;
+        [Required, MaxLength(80)]
+        public string Name { get; set; } = default!;
 
-        public string Category { get; set; } = string.Empty;
+        public ValueCategory Category { get; set; }
+
+        [MaxLength(240)]
+        public string? ShortDefinition { get; set; }
+
+        [MaxLength(240)]
+        public string? BehaviorIndicator { get; set; }
 
         public ICollection<UserValue> UserValues { get; set; } = new List<UserValue>();
     }

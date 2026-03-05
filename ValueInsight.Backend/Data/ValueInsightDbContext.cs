@@ -21,6 +21,10 @@ namespace ValueInsight.Backend.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ValueInsightDbContext).Assembly);
+
+            // Seed initial values
+            modelBuilder.Entity<Value>().HasData(SeedData.Values);
+
             base.OnModelCreating(modelBuilder);
         }
     }
