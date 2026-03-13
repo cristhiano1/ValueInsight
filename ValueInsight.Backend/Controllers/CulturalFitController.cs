@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using ValueInsight.Backend.Services;
 using ValueInsight.Backend.Dtos;
 
@@ -6,6 +7,7 @@ namespace ValueInsight.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class CulturalFitController : ControllerBase
     {
         private readonly CulturalFitService _service;

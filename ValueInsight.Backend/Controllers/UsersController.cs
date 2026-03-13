@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using ValueInsight.Backend.Data;
 using ValueInsight.Backend.Models;
@@ -7,6 +8,7 @@ namespace ValueInsight.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly ValueInsightDbContext _context;
