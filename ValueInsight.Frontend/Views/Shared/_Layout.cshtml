@@ -1,4 +1,4 @@
-﻿
+﻿@using Microsoft.AspNetCore.Http
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +26,7 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <!-- RIGHT: Links -->
+                @* <!-- RIGHT: Links -->
                 <div class="collapse navbar-collapse" id="viNav">
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
                         <li class="nav-item">
@@ -46,6 +46,43 @@
                                 Register
                             </a>
                         </li>
+                    </ul>
+                </div *@>
+                <!-- RIGHT: Links -->
+                <div class="collapse navbar-collapse" id="viNav">
+                    @{
+                        var token = Context.Session.GetString("JWToken");
+                    }
+
+                    <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+                        <li class="nav-item">
+                            <a class="nav-link vi-navlink" asp-area="" asp-controller="Home" asp-action="Index">
+                                Home
+                            </a>
+                        </li>
+
+                        @if (string.IsNullOrEmpty(token))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link vi-navlink" asp-controller="Account" asp-action="Login">
+                                    Login
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a class="btn vi-nav-cta" asp-controller="Account" asp-action="Register">
+                                    Register
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="btn vi-nav-cta" asp-controller="Account" asp-action="Logout">
+                                    Logout
+                                </a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </div>
