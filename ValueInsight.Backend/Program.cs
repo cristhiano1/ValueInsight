@@ -34,6 +34,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<AiCoachService>();
 builder.Services.AddScoped<CulturalFitService>();
 builder.Services.AddScoped<TeamCultureService>();
+builder.Services.AddScoped<JwtService>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
