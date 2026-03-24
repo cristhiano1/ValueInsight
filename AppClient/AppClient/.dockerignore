@@ -1,0 +1,34 @@
+# Node / frontend
+node_modules
+dist
+build
+.vite
+.vitepress
+.bun
+bun.lock
+bun.lockb
+
+# .NET build output
+bin
+obj
+
+# Editor / OS
+.vs
+.vscode
+.idea
+*.user
+*.suo
+*.log
+*.tmp
+
+# Static dev files, envs, caches
+.env
+.env.*.local
+.cache
+.cache-loader
+.tmp
+npm-debug.log
+yarn-error.log
+
+# Docker / temp
+**/.dockerignore.tmp	

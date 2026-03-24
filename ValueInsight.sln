@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36414.22 d17.14
+VisualStudioVersion = 17.14.36414.22
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ValueInsight.Backend", "ValueInsight.Backend\ValueInsight.Backend.csproj", "{AA28CBD0-CB0D-4745-90EB-1F7CC183F633}"
 EndProject
@@ -11,6 +11,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solucion Items", "Solucion 
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppClient", "..\..\..\Downloads\AppClient\AppClient\AppClient.csproj", "{9497DCBA-FAFD-0E5E-F4D9-7E0EE4835330}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,6 +28,10 @@ Global
 		{BDC936A2-E2B5-4C4C-89FD-ADFC43B59544}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDC936A2-E2B5-4C4C-89FD-ADFC43B59544}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDC936A2-E2B5-4C4C-89FD-ADFC43B59544}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9497DCBA-FAFD-0E5E-F4D9-7E0EE4835330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9497DCBA-FAFD-0E5E-F4D9-7E0EE4835330}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9497DCBA-FAFD-0E5E-F4D9-7E0EE4835330}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9497DCBA-FAFD-0E5E-F4D9-7E0EE4835330}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

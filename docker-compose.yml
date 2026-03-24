@@ -1,12 +1,11 @@
-﻿version: "3.9"
+﻿services:
 
-services:
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: valueinsight-db
     environment:
-      - ACCEPT_EULA=Y
-      - SA_PASSWORD=Your_password123!
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Your_password123!"
     ports:
       - "1433:1433"
     volumes:
@@ -14,26 +13,26 @@ services:
     networks:
       - valueinsight-net
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Your_password123! -C -Q 'SELECT 1' || exit 1"]
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Your_password123! -C -Q 'SELECT 1' || exit 1"]
       interval: 10s
       timeout: 5s
-      retries: 15
+      retries: 5
       start_period: 40s
 
   backend:
     build:
-      context: ./ValueInsight.Backend
+      context: .
       dockerfile: Dockerfile
     container_name: valueinsight-backend
     ports:
-      - "8081:8080"
+      - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=ValueInsightDb;User Id=sa;Password=Your_password123!;TrustServerCertificate=True;Encrypt=False
-      - OLLAMA_BASE_URL=http://ollama:11434
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Server=db,1433;Database=ValueInsightDb;User Id=sa;Password=Your_password123!;TrustServerCertificate=True;Encrypt=False
+      OLLAMA_BASE_URL: http://ollama:11434
     networks:
       - valueinsight-net
 
@@ -43,16 +42,37 @@ services:
       dockerfile: Dockerfile
     container_name: valueinsight-frontend
     ports:
-      - "8080:8080"
+      - "8081:80"
     depends_on:
       - backend
     environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ApiSettings__BaseUrl=http://backend:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      ApiSettings__BaseUrl: http://backend:8080
     networks:
       - valueinsight-net
 
-  # 🔥 OPCIONAL — solo si usarán Ollama local
+  appclient:
+    build:
+      context: ./AppClient/team-compass   # ✅ CORRECTO
+      dockerfile: Dockerfile
+    container_name: valueinsight-appclient
+    ports:
+      - "8082:3000"
+    depends_on:
+      - backend
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ApiSettings__BaseUrl: http://backend:8080
+      ASPNETCORE_URLS: http://+:3000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - valueinsight-net
+
   ollama:
     image: ollama/ollama:latest
     container_name: valueinsight-ollama

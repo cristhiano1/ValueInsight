@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>fc310539-def9-4a2d-afec-dc27f05f3dd5</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Remove="wwwroot\assets\index-5i3l3WAm.css" />
+    <Content Remove="wwwroot\assets\index-wGzaXuMg.js" />
+    <Content Remove="wwwroot\favicon.ico" />
+    <Content Remove="wwwroot\index.html" />
+    <Content Remove="wwwroot\placeholder.svg" />
+    <Content Remove="wwwroot\robots.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\assets\index-5i3l3WAm.css" />
+    <None Include="wwwroot\assets\index-wGzaXuMg.js" />
+    <None Include="wwwroot\favicon.ico" />
+    <None Include="wwwroot\index.html" />
+    <None Include="wwwroot\placeholder.svg" />
+    <None Include="wwwroot\robots.txt" />
+  </ItemGroup>
+
+</Project>
