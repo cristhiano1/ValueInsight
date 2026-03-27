@@ -434,3 +434,63 @@ body {
         margin-top: 20px;
     }
 }
+
+.vi-card-glass {
+    background: rgba(255,255,255,.08);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 18px;
+    backdrop-filter: blur(12px);
+}
+
+.vi-card-glass--light {
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
+}
+
+.vi-value-card {
+    cursor: pointer;
+    margin: 0;
+}
+
+.vi-value-check {
+    display: none;
+}
+
+.vi-value-card__inner {
+    height: 100%;
+    padding: 1rem;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.05);
+    transition: all .18s ease;
+}
+
+.vi-value-card:hover .vi-value-card__inner {
+    transform: translateY(-2px);
+    border-color: rgba(56,189,248,.65);
+}
+
+.vi-value-check:checked + .vi-value-card__inner {
+    border-color: #38bdf8;
+    background: rgba(56,189,248,.14);
+    box-shadow: 0 0 0 2px rgba(56,189,248,.18);
+}
+
+.vi-category-box {
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+}
+
+.vi-selected-panel {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 14px;
+    padding: 1rem;
+}
+
+.vi-selected-chip {
+    background: rgba(56,189,248,.12);
+    border: 1px solid rgba(56,189,248,.35);
+    border-radius: 12px;
+    padding: .85rem 1rem;
+}

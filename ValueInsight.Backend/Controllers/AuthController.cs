@@ -46,16 +46,21 @@ namespace ValueInsight.Backend.Controllers
         //    return Ok(new { token });
         //}
 
+        
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
             var exists = await _db.Users.AnyAsync(u => u.Email == request.Email);
+
             if (exists)
                 return BadRequest("User already exists");
 
-            var teamExists = await _db.Teams.AnyAsync(t => t.Id == request.TeamId);
-            if (!teamExists)
-                return BadRequest($"Team with id {request.TeamId} does not exist");
+            if (request.TeamId.HasValue)
+            {
+                var teamExists = await _db.Teams.AnyAsync(t => t.Id == request.TeamId.Value);
+                if (!teamExists)
+                    return BadRequest($"Team with id {request.TeamId.Value} does not exist");
+            }
 
             var user = new User
             {

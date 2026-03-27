@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿
+using System.Text;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using ValueInsight.Frontend.Models;
@@ -16,15 +17,39 @@ namespace ValueInsight.Frontend.Controllers
             _configuration = configuration;
         }
 
-        [HttpGet]
-        public IActionResult Register()
+        private async Task<List<TeamOptionViewModel>> LoadTeamsAsync()
         {
-            return View(new RegisterViewModel());
+            var client = _httpClientFactory.CreateClient();
+            var baseUrl = _configuration["ApiSettings:BaseUrl"];
+
+            var response = await client.GetAsync($"{baseUrl}/api/teams");
+
+            if (!response.IsSuccessStatusCode)
+                return new List<TeamOptionViewModel>();
+
+            var json = await response.Content.ReadAsStringAsync();
+
+            return JsonSerializer.Deserialize<List<TeamOptionViewModel>>(json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+                ?? new List<TeamOptionViewModel>();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Register()
+        {
+            var model = new RegisterViewModel
+            {
+                Teams = await LoadTeamsAsync()
+            };
+
+            return View(model);
         }
 
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
+            model.Teams = await LoadTeamsAsync();
+
             if (!ModelState.IsValid)
                 return View(model);
 

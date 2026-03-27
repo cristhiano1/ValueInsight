@@ -17,6 +17,7 @@ namespace ValueInsight.Backend.Data
         public DbSet<UserValue> UserValues => Set<UserValue>();
         public DbSet<Team> Teams => Set<Team>();
         public DbSet<CulturalFitResult> CulturalFitResults => Set<CulturalFitResult>();
+        public DbSet<ReflectionAnswer> ReflectionAnswers => Set<ReflectionAnswer>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -24,6 +25,7 @@ namespace ValueInsight.Backend.Data
 
             // Seed initial values
             modelBuilder.Entity<Value>().HasData(SeedData.Values);
+            modelBuilder.Entity<Team>().HasData(TeamSeedData.Teams);
 
             base.OnModelCreating(modelBuilder);
         }

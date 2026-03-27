@@ -1,0 +1,154 @@
+﻿
+
+@model ValueInsight.Frontend.Models.ValueSelectionViewModel
+@{
+    ViewData["Title"] = "Select 10 Values";
+}
+
+<section class="container py-5">
+    <div class="vi-card-glass vi-card-glass--light p-4">
+        <div class="vi-badge mb-3">Step 2 — Value Selection</div>
+        <h1 class="text-white mb-2">Choose 10 values</h1>
+        <p class="text-white-50 mb-4">
+            Select values from each category. Your selected values will appear below.
+        </p>
+
+        <form asp-action="SelectTen" method="post" id="valueSelectionForm">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="row g-4">
+                @for (int i = 0; i < Model.Categories.Count; i++)
+                {
+                    var category = Model.Categories[i];
+
+                    <div class="col-md-6">
+                        <div class="vi-category-box p-3">
+                            <label class="form-label text-white fw-semibold">@category.CategoryName</label>
+
+                            <select class="form-select value-category-dropdown"
+                                    data-category="@category.CategoryName">
+                                <option value="">-- Select a value --</option>
+                                @foreach (var value in category.Values)
+                                {
+                                    <option value="@value.Id"
+                                            data-name="@value.Name"
+                                            data-category="@value.Category">
+                                        @value.Name
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <hr class="my-4 border-light-subtle" />
+
+            <div class="vi-selected-panel">
+                <h4 class="text-white mb-3">Selected Values (<span id="selectedCount">0</span>/10)</h4>
+
+                <div id="selectedValuesList" class="row g-2 mb-3"></div>
+
+                <div id="hiddenInputsContainer"></div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a class="btn btn-outline-light" asp-controller="Home" asp-action="Start">Back</a>
+                <button type="submit" class="btn vi-btn-primary">Continue →</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const selectedValues = new Map();
+        const maxSelections = 10;
+
+        const selectedValuesList = document.getElementById("selectedValuesList");
+        const hiddenInputsContainer = document.getElementById("hiddenInputsContainer");
+        const selectedCount = document.getElementById("selectedCount");
+        const dropdowns = document.querySelectorAll(".value-category-dropdown");
+
+        function renderSelectedValues() {
+            selectedValuesList.innerHTML = "";
+            hiddenInputsContainer.innerHTML = "";
+
+            let index = 0;
+            selectedValues.forEach((value, id) => {
+                const chip = document.createElement("div");
+                chip.className = "col-md-6";
+
+                chip.innerHTML = `
+                    <div class="vi-selected-chip d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="fw-semibold text-white">${value.name}</div>
+                            <div class="small text-white-50">${value.category}</div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-light" onclick="removeSelectedValue('${id}')">
+                            Remove
+                        </button>
+                    </div>
+                `;
+
+                selectedValuesList.appendChild(chip);
+
+                const hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = "SelectedValueIds";
+                hiddenInput.value = id;
+
+                hiddenInputsContainer.appendChild(hiddenInput);
+                index++;
+            });
+
+            selectedCount.textContent = selectedValues.size;
+        }
+
+        function removeSelectedValue(id) {
+            selectedValues.delete(id);
+
+            dropdowns.forEach(dropdown => {
+                if (dropdown.value === id) {
+                    dropdown.value = "";
+                }
+            });
+
+            renderSelectedValues();
+        }
+
+        dropdowns.forEach(dropdown => {
+            dropdown.addEventListener("change", function () {
+                const selectedOption = this.options[this.selectedIndex];
+                const id = selectedOption.value;
+
+                if (!id) return;
+
+                if (selectedValues.has(id)) {
+                    alert("You already selected that value.");
+                    this.value = "";
+                    return;
+                }
+
+                if (selectedValues.size >= maxSelections) {
+                    alert("You can select a maximum of 10 values.");
+                    this.value = "";
+                    return;
+                }
+
+                const name = selectedOption.getAttribute("data-name");
+                const category = selectedOption.getAttribute("data-category");
+
+                selectedValues.set(id, { name, category });
+                renderSelectedValues();
+            });
+        });
+
+        document.getElementById("valueSelectionForm").addEventListener("submit", function (e) {
+            if (selectedValues.size !== 10) {
+                e.preventDefault();
+                alert("Please select exactly 10 values before continuing.");
+            }
+        });
+    </script>
+}

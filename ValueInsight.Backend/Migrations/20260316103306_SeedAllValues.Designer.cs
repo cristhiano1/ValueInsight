@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValueInsight.Backend.Data;
 
@@ -11,9 +12,11 @@ using ValueInsight.Backend.Data;
 namespace ValueInsight.Backend.Migrations
 {
     [DbContext(typeof(ValueInsightDbContext))]
-    partial class ValueInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260316103306_SeedAllValues")]
+    partial class SeedAllValues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -46,36 +49,6 @@ namespace ValueInsight.Backend.Migrations
                     b.ToTable("CulturalFitResults");
                 });
 
-            modelBuilder.Entity("ValueInsight.Backend.Models.ReflectionAnswer", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("QuestionId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("QuestionText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ResponseText")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ReflectionAnswers");
-                });
-
             modelBuilder.Entity("ValueInsight.Backend.Models.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -92,33 +65,6 @@ namespace ValueInsight.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Teams");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Engineering"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Product"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Design"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Marketing"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Name = "Operations"
-                        });
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.User", b =>
@@ -141,7 +87,7 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TeamId")
+                    b.Property<int>("TeamId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -691,22 +637,13 @@ namespace ValueInsight.Backend.Migrations
                     b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("ValueInsight.Backend.Models.ReflectionAnswer", b =>
-                {
-                    b.HasOne("ValueInsight.Backend.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("ValueInsight.Backend.Models.User", b =>
                 {
                     b.HasOne("ValueInsight.Backend.Models.Team", "Team")
                         .WithMany("Users")
-                        .HasForeignKey("TeamId");
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Team");
                 });

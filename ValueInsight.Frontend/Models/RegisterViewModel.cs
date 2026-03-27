@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿
+using System.ComponentModel.DataAnnotations;
 
 namespace ValueInsight.Frontend.Models
 {
@@ -15,7 +16,9 @@ namespace ValueInsight.Frontend.Models
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
 
-        [Required]
-        public int TeamId { get; set; }
+        [Display(Name = "Team")]
+        public int? TeamId { get; set; }
+
+        public List<TeamOptionViewModel> Teams { get; set; } = new();
     }
 }

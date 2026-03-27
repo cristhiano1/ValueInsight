@@ -1,4 +1,6 @@
-﻿@model ValueInsight.Frontend.Models.RegisterViewModel
+﻿
+
+@model ValueInsight.Frontend.Models.RegisterViewModel
 
 @{
     ViewData["Title"] = "Register";
@@ -29,8 +31,14 @@
         </div>
 
         <div class="mb-3">
-            <label asp-for="TeamId" class="text-white">Team Id</label>
-            <input asp-for="TeamId" class="form-control" />
+            <label asp-for="TeamId" class="text-white"></label>
+            <select asp-for="TeamId" class="form-select">
+                <option value="">-- optional --</option>
+                @foreach (var team in Model.Teams)
+                {
+                    <option value="@team.Id">@team.Name</option>
+                }
+            </select>
             <span asp-validation-for="TeamId" class="text-danger"></span>
         </div>
 

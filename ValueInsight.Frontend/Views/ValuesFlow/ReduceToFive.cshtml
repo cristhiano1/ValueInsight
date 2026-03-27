@@ -1,0 +1,65 @@
+﻿
+@model ValueInsight.Frontend.Models.ValueSelectionViewModel
+@{
+    ViewData["Title"] = "Reduce to 5";
+}
+
+<section class="container py-5">
+    <div class="vi-card-glass vi-card-glass--light p-4">
+        <div class="vi-badge mb-3">Step 3 — Prioritize</div>
+        <h1 class="text-white mb-2">Reduce to 5 values</h1>
+        <p class="text-white-50 mb-2">From your 10 selected values, choose the 5 most important.</p>
+        <p class="text-white-50 mb-4">Selected: <span id="selectedCount">0</span>/5</p>
+
+        <form asp-action="ReduceToFive" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                @foreach (var value in Model.AvailableValues)
+                {
+                    <div class="col-md-6">
+                        <label class="vi-value-card d-block">
+                            <input type="checkbox" name="SelectedValueIds" value="@value.Id" class="vi-value-check" />
+                            <div class="vi-value-card__inner">
+                                <div class="fw-semibold text-white">@value.Name</div>
+                                <div class="small text-info-emphasis">@value.Category</div>
+                            </div>
+                        </label>
+                    </div>
+                }
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a class="btn btn-outline-light" asp-action="SelectTen">Back</a>
+                <button type="submit" class="btn vi-btn-primary">Continue →</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        const maxSelections = 5;
+        const checkboxes = document.querySelectorAll('input[name="SelectedValueIds"]');
+        const selectedCountEl = document.getElementById('selectedCount');
+
+        function updateCheckboxState() {
+            const checked = document.querySelectorAll('input[name="SelectedValueIds"]:checked');
+            const checkedCount = checked.length;
+
+            if (selectedCountEl) {
+                selectedCountEl.textContent = checkedCount;
+            }
+
+            checkboxes.forEach(cb => {
+                cb.disabled = !cb.checked && checkedCount >= maxSelections;
+            });
+        }
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateCheckboxState);
+        });
+
+        document.addEventListener('DOMContentLoaded', updateCheckboxState);
+    </script>
+}

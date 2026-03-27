@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValueInsight.Backend.Data;
 
@@ -11,9 +12,11 @@ using ValueInsight.Backend.Data;
 namespace ValueInsight.Backend.Migrations
 {
     [DbContext(typeof(ValueInsightDbContext))]
-    partial class ValueInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260317150719_AddReflectionAnswers")]
+    partial class AddReflectionAnswers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,33 +95,6 @@ namespace ValueInsight.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Teams");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Engineering"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Product"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Design"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Marketing"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Name = "Operations"
-                        });
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.User", b =>
@@ -141,7 +117,7 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TeamId")
+                    b.Property<int>("TeamId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -706,7 +682,9 @@ namespace ValueInsight.Backend.Migrations
                 {
                     b.HasOne("ValueInsight.Backend.Models.Team", "Team")
                         .WithMany("Users")
-                        .HasForeignKey("TeamId");
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Team");
                 });

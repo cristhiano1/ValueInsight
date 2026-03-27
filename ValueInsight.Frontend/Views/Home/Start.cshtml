@@ -61,12 +61,10 @@
                         <a class="btn btn-outline-light" asp-controller="Home" asp-action="Index">
                             Back to Home
                         </a>
-
-                        <!-- Future step: link to next page when you build it -->
-                        <button class="btn vi-btn-primary ms-auto" type="button" disabled
-                                title="Next step not built yet">
+                                                
+                        <a class="btn vi-btn-primary ms-auto" asp-controller="ValuesFlow" asp-action="SelectTen">
                             Next →
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -77,115 +75,135 @@
     </div>
 </section>
 
+
 @section Scripts {
     <script>
         (() => {
-          const STORAGE_KEY = "valueInsight.reflection.v1";
+            const fields = [
+                { id: "q1", question: "When do you feel most proud at work?" },
+                { id: "q2", question: "What situations frustrate you the most?" },
+                { id: "q3", question: "What needs to be true for you to perform at your best?" },
+                { id: "q4", question: "Which behaviors do you find hard to tolerate?" }
+            ];
 
-          const fields = [
-            { id: "q1", question: "When do you feel most proud at work?" },
-            { id: "q2", question: "What situations frustrate you the most?" },
-            { id: "q3", question: "What needs to be true for you to perform at your best?" },
-            { id: "q4", question: "Which behaviors do you find hard to tolerate?" }
-          ];
+            const saveDot = document.getElementById("viSaveDot");
+            const saveText = document.getElementById("viSaveText");
+            const clearBtn = document.getElementById("clearBtn");
 
-          const saveDot = document.getElementById("viSaveDot");
-          const saveText = document.getElementById("viSaveText");
-          const clearBtn = document.getElementById("clearBtn");
+            let saveTimer = null;
 
-          let saveTimer = null;
+            function setSavingUI(state, timestamp) {
+                saveDot.classList.remove("is-saving", "is-saved");
 
-          function setSavingUI(state, timestamp) {
-            // state: "idle" | "saving" | "saved"
-            saveDot.classList.remove("is-saving", "is-saved");
-            if (state === "saving") saveDot.classList.add("is-saving");
-            if (state === "saved") saveDot.classList.add("is-saved");
+                if (state === "saving") saveDot.classList.add("is-saving");
+                if (state === "saved") saveDot.classList.add("is-saved");
 
-            if (state === "saving") saveText.textContent = "Saving...";
-            if (state === "idle") saveText.textContent = "Not saved yet";
-            if (state === "saved") {
-              const t = timestamp ? new Date(timestamp) : new Date();
-              saveText.textContent = "Saved " + t.toLocaleTimeString();
+                if (state === "saving") saveText.textContent = "Saving...";
+                if (state === "idle") saveText.textContent = "Not saved yet";
+                if (state === "saved") {
+                    const t = timestamp ? new Date(timestamp) : new Date();
+                    saveText.textContent = "Saved " + t.toLocaleTimeString();
+                }
             }
-          }
 
-          function readDraft() {
-            try {
-              const raw = localStorage.getItem(STORAGE_KEY);
-              return raw ? JSON.parse(raw) : null;
-            } catch {
-              return null;
+            function collectPayload() {
+                return {
+                    answers: fields.map(f => {
+                        const el = document.getElementById(f.id);
+                        return {
+                            questionId: f.id,
+                            questionText: f.question,
+                            responseText: (el?.value ?? "").trim()
+                        };
+                    })
+                };
             }
-          }
 
-          function writeDraft(payload) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-          }
+            function restoreToForm(items) {
+                if (!items || !Array.isArray(items)) return;
 
-          function collectPayload() {
-            const answers = fields.map(f => {
-              const el = document.getElementById(f.id);
-              return {
-                questionId: f.id,
-                questionText: f.question,
-                responseText: (el?.value ?? "").trim()
-              };
+                for (const a of items) {
+                    const el = document.getElementById(a.questionId);
+                    if (el) el.value = a.responseText ?? "";
+                }
+
+                setSavingUI("saved", new Date().toISOString());
+            }
+
+            async function loadAnswers() {
+                try {
+                    const response = await fetch("/Reflection/Mine", {
+                        method: "GET",
+                        headers: { "Accept": "application/json" }
+                    });
+
+                    if (!response.ok) {
+                        setSavingUI("idle");
+                        return;
+                    }
+
+                    const data = await response.json();
+                    restoreToForm(data);
+                } catch {
+                    setSavingUI("idle");
+                }
+            }
+
+            async function saveAnswers() {
+                const payload = collectPayload();
+
+                try {
+                    const response = await fetch("/Reflection/Save", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        setSavingUI("saved", new Date().toISOString());
+                    } else {
+                        setSavingUI("idle");
+                    }
+                } catch {
+                    setSavingUI("idle");
+                }
+            }
+
+            function scheduleSave() {
+                setSavingUI("saving");
+
+                if (saveTimer) clearTimeout(saveTimer);
+
+                saveTimer = setTimeout(() => {
+                    saveAnswers();
+                }, 500);
+            }
+
+            async function clearAll() {
+                for (const f of fields) {
+                    const el = document.getElementById(f.id);
+                    if (el) el.value = "";
+                }
+
+                setSavingUI("saving");
+                await saveAnswers();
+            }
+
+            for (const f of fields) {
+                const el = document.getElementById(f.id);
+                if (!el) continue;
+                el.addEventListener("input", scheduleSave);
+            }
+
+            clearBtn?.addEventListener("click", async () => {
+                if (confirm("Clear all your saved reflection answers?")) {
+                    await clearAll();
+                }
             });
 
-            return {
-              version: 1,
-              sessionId: crypto?.randomUUID ? undefined : undefined, // optional later
-              updatedAt: new Date().toISOString(),
-              answers
-            };
-          }
-
-          function restoreToForm(draft) {
-            if (!draft || !draft.answers) return;
-            for (const a of draft.answers) {
-              const el = document.getElementById(a.questionId);
-              if (el) el.value = a.responseText ?? "";
-            }
-            if (draft.updatedAt) setSavingUI("saved", draft.updatedAt);
-          }
-
-          function scheduleSave() {
-            setSavingUI("saving");
-            if (saveTimer) clearTimeout(saveTimer);
-
-            // Debounce so we don't write on every keystroke instantly
-            saveTimer = setTimeout(() => {
-              const payload = collectPayload();
-              writeDraft(payload);
-              setSavingUI("saved", payload.updatedAt);
-            }, 350);
-          }
-
-          function clearAll() {
-            localStorage.removeItem(STORAGE_KEY);
-            for (const f of fields) {
-              const el = document.getElementById(f.id);
-              if (el) el.value = "";
-            }
-            setSavingUI("idle");
-          }
-
-          // Hook up events
-          for (const f of fields) {
-            const el = document.getElementById(f.id);
-            if (!el) continue;
-            el.addEventListener("input", scheduleSave);
-          }
-
-          clearBtn?.addEventListener("click", () => {
-            if (confirm("Clear all reflection answers saved in this browser?")) {
-              clearAll();
-            }
-          });
-
-          // Initial load
-          restoreToForm(readDraft());
+            loadAnswers();
         })();
     </script>
 }
->
