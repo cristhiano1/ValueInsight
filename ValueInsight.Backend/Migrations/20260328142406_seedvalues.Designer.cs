@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValueInsight.Backend.Data;
 
@@ -11,9 +12,11 @@ using ValueInsight.Backend.Data;
 namespace ValueInsight.Backend.Migrations
 {
     [DbContext(typeof(ValueInsightDbContext))]
-    partial class ValueInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328142406_seedvalues")]
+    partial class seedvalues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -18,12 +18,28 @@ namespace ValueInsight.Backend.Controllers
             _context = context;
         }
 
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
+        //{
+        //    return await _context.Teams
+        //        .Include(t => t.Users)
+        //        .ToListAsync();
+        //}
+
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
+        [AllowAnonymous]
+        public async Task<IActionResult> GetTeams()
         {
-            return await _context.Teams
-                .Include(t => t.Users)
+            var teams = await _context.Teams
+                .OrderBy(t => t.Name)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Name
+                })
                 .ToListAsync();
+
+            return Ok(teams);
         }
 
         [HttpGet("{id}")]

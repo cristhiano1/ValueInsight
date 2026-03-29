@@ -1,0 +1,40 @@
+﻿@model ValueInsight.Frontend.Models.ConcretizeTopValuesViewModel
+@{
+    ViewData["Title"] = "Concretize Top 3";
+}
+
+<section class="container py-5">
+    <div class="vi-card-glass vi-card-glass--light p-4">
+        <div class="vi-badge mb-3">Step 5 — Make it concrete</div>
+        <h1 class="text-white mb-2">Describe your top 3 values</h1>
+        <p class="text-white-50 mb-4">These reflections strengthen the coaching and report experience.</p>
+
+        <form asp-action="ConcretizeTopThree" method="post">
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            @for (var i = 0; i < Model.TopValues.Count; i++)
+            {
+                <input asp-for="TopValues[i].ValueId" type="hidden" />
+                <input asp-for="TopValues[i].ValueName" type="hidden" />
+
+                <div class="vi-selected-chip mb-4 p-3">
+                    <h3 class="h5 text-white mb-3">@Model.TopValues[i].ValueName</h3>
+
+                    <label class="vi-label mb-2">What does this value mean to you?</label>
+                    <textarea asp-for="TopValues[i].Meaning" class="form-control vi-textarea mb-3" rows="3"></textarea>
+
+                    <label class="vi-label mb-2">How does it show up in your behaviour?</label>
+                    <textarea asp-for="TopValues[i].Behavior" class="form-control vi-textarea mb-3" rows="3"></textarea>
+
+                    <label class="vi-label mb-2">What happens when it is not respected?</label>
+                    <textarea asp-for="TopValues[i].Friction" class="form-control vi-textarea" rows="3"></textarea>
+                </div>
+            }
+
+            <div class="d-flex justify-content-between mt-4">
+                <a class="btn btn-outline-light" asp-action="RankTopThree">Back</a>
+                <button type="submit" class="btn vi-btn-primary">Open my report →</button>
+            </div>
+        </form>
+    </div>
+</section>

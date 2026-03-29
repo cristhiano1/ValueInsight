@@ -1,0 +1,183 @@
+﻿@model ValueInsight.Frontend.Models.ValueSelectionViewModel
+
+@{
+    ViewData["Title"] = "Select Values";
+}
+
+<div class="container mt-5 mb-5 select-ten-page">
+    <div class="vi-badge mb-3">Step 2 — Select 10 Values</div>
+    <h2 class="mb-3">Choose 10 values</h2>
+   @*  <p class="mb-4">Select values from each category.</p> *@
+
+    <form id="valueSelectionForm" method="post" asp-action="SelectTen">
+        <div class="row">
+            @foreach (var category in Model.Categories)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="custom-dropdown">
+                        <div class="dropdown-header" data-category-name="@category.CategoryName">
+                            @category.CategoryName
+                        </div>
+
+                        <div class="dropdown-body">
+                            @foreach (var value in category.Values)
+                            {
+                                <label class="dropdown-item">
+                                    <input type="checkbox"
+                                           value="@value.Id"
+                                           data-name="@value.Name"
+                                           data-category="@category.CategoryName"
+                                           @(Model.SelectedValueIds.Contains(value.Id) ? "checked" : "") />
+                                    <span>@value.Name</span>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <hr class="my-4" />
+
+        <h4 class="mb-4">Selected Values (<span id="selectedCount">0</span>/10)</h4>
+
+        <div id="selectedValuesList" class="row"></div>
+        <div id="hiddenInputsContainer"></div>
+
+        <div class="d-flex justify-content-between mt-4">
+            <a asp-action="Start" asp-controller="Home" class="btn btn-outline-light">
+                ← Back
+            </a>
+
+            <button type="submit" class="btn btn-primary">
+                Continue →
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        const selectedValues = new Map();
+        const maxSelections = 10;
+
+        const selectedValuesList = document.getElementById("selectedValuesList");
+        const hiddenInputsContainer = document.getElementById("hiddenInputsContainer");
+        const selectedCount = document.getElementById("selectedCount");
+
+        document.querySelectorAll(".dropdown-header").forEach(header => {
+            header.addEventListener("click", function () {
+                const currentDropdown = this.closest(".custom-dropdown");
+
+                document.querySelectorAll(".custom-dropdown").forEach(dropdown => {
+                    if (dropdown !== currentDropdown) {
+                        dropdown.classList.remove("open");
+                    }
+                });
+
+                currentDropdown.classList.toggle("open");
+            });
+        });
+
+        document.addEventListener("click", function (e) {
+            if (!e.target.closest(".custom-dropdown")) {
+                document.querySelectorAll(".custom-dropdown").forEach(dropdown => {
+                    dropdown.classList.remove("open");
+                });
+            }
+        });
+
+        document.querySelectorAll(".dropdown-body input[type='checkbox']").forEach(checkbox => {
+            const id = checkbox.value;
+            const name = checkbox.dataset.name;
+            const category = checkbox.dataset.category;
+
+            if (checkbox.checked) {
+                selectedValues.set(id, { name, category });
+            }
+
+            checkbox.addEventListener("change", function () {
+                if (this.checked) {
+                    if (selectedValues.size >= maxSelections) {
+                        alert("You can select only 10 values.");
+                        this.checked = false;
+                        return;
+                    }
+
+                    selectedValues.set(id, { name, category });
+                } else {
+                    selectedValues.delete(id);
+                }
+
+                renderSelectedValues();
+                updateHeaders();
+            });
+        });
+
+        function renderSelectedValues() {
+            selectedValuesList.innerHTML = "";
+            hiddenInputsContainer.innerHTML = "";
+
+            selectedValues.forEach((value, id) => {
+                const chip = document.createElement("div");
+                chip.className = "col-md-4";
+
+                chip.innerHTML = `
+                    <div class="vi-selected-chip">
+                        <div>
+                            <div class="value-name">${value.name}</div>
+                            <div class="value-category">${value.category}</div>
+                        </div>
+                        <button type="button" class="btn btn-sm" onclick="removeValue('${id}')">×</button>
+                    </div>
+                `;
+
+                selectedValuesList.appendChild(chip);
+
+                const hiddenInput = document.createElement("input");
+                hiddenInput.type = "hidden";
+                hiddenInput.name = "SelectedValueIds";
+                hiddenInput.value = id;
+                hiddenInputsContainer.appendChild(hiddenInput);
+            });
+
+            selectedCount.textContent = selectedValues.size;
+        }
+
+        function removeValue(id) {
+            selectedValues.delete(id);
+
+            const checkbox = document.querySelector(`.dropdown-body input[value='${id}']`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+
+            renderSelectedValues();
+            updateHeaders();
+        }
+
+        function updateHeaders() {
+            document.querySelectorAll(".custom-dropdown").forEach(dropdown => {
+                const header = dropdown.querySelector(".dropdown-header");
+                const checkedCount = dropdown.querySelectorAll("input[type='checkbox']:checked").length;
+                const categoryName = header.getAttribute("data-category-name");
+
+                if (checkedCount > 0) {
+                    header.textContent = `${categoryName} (${checkedCount} selected)`;
+                } else {
+                    header.textContent = categoryName;
+                }
+            });
+        }
+
+        document.getElementById("valueSelectionForm").addEventListener("submit", function (e) {
+            if (selectedValues.size !== 10) {
+                e.preventDefault();
+                alert("Please select exactly 10 values.");
+            }
+        });
+
+        renderSelectedValues();
+        updateHeaders();
+    </script>
+}
