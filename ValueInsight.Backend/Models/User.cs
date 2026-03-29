@@ -10,10 +10,11 @@
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
 
-        public int TeamId { get; set; }
+        public int? TeamId { get; set; }
 
-        public Team Team { get; set; } = null!;
+        public Team? Team { get; set; } = null!;
 
         public ICollection<UserValue> UserValues { get; set; } = new List<UserValue>();
+        public ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
     }
 }

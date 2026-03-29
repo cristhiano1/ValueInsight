@@ -15,55 +15,40 @@ namespace ValueInsight.Backend.Controllers
     {
         private readonly ValueInsightDbContext _db;
         private readonly JwtService _jwt;
+        private readonly PasswordService _passwordService;
 
-        public AuthController(ValueInsightDbContext db, JwtService jwt)
+        public AuthController(ValueInsightDbContext db, JwtService jwt, PasswordService passwordService)
         {
             _db = db;
             _jwt = jwt;
+            _passwordService = passwordService;
         }
 
-        //[HttpPost("register")]
-        //public async Task<IActionResult> Register(RegisterRequest request)
-        //{
-        //    var exists = await _db.Users
-        //        .AnyAsync(u => u.Email == request.Email);
 
-        //    if (exists)
-        //        return BadRequest("User already exists");
-
-        //    var user = new User
-        //    {
-        //        Name = request.Name,
-        //        Email = request.Email,
-        //        Password = request.Password
-        //    };
-
-        //    _db.Users.Add(user);
-        //    await _db.SaveChangesAsync();
-
-        //    var token = _jwt.GenerateToken(user.Id, user.Email);
-
-        //    return Ok(new { token });
-        //}
 
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
             var exists = await _db.Users.AnyAsync(u => u.Email == request.Email);
+
             if (exists)
                 return BadRequest("User already exists");
 
-            var teamExists = await _db.Teams.AnyAsync(t => t.Id == request.TeamId);
-            if (!teamExists)
-                return BadRequest($"Team with id {request.TeamId} does not exist");
+            if (request.TeamId.HasValue)
+            {
+                var teamExists = await _db.Teams.AnyAsync(t => t.Id == request.TeamId.Value);
+                if (!teamExists)
+                    return BadRequest($"Team with id {request.TeamId.Value} does not exist");
+            }
 
             var user = new User
             {
                 Name = request.Name,
                 Email = request.Email,
-                Password = request.Password,
                 TeamId = request.TeamId
             };
+
+            user.Password = _passwordService.HashPassword(user, request.Password);
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
@@ -73,13 +58,19 @@ namespace ValueInsight.Backend.Controllers
             return Ok(new { token });
         }
 
+
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
             var user = await _db.Users
                 .FirstOrDefaultAsync(u => u.Email == request.Email);
 
-            if (user == null || user.Password != request.Password)
+            if (user == null)
+                return Unauthorized("Invalid credentials");
+
+            var isValid = _passwordService.VerifyPassword(user, user.Password, request.Password);
+
+            if (!isValid)
                 return Unauthorized("Invalid credentials");
 
             var token = _jwt.GenerateToken(user.Id, user.Email);

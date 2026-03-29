@@ -18,10 +18,27 @@ namespace ValueInsight.Backend.Controllers
             _context = context;
         }
 
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<Value>>> GetValues()
+        //{
+        //    return await _context.Values.ToListAsync();
+        //}
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Value>>> GetValues()
+        public async Task<IActionResult> GetValues()
         {
-            return await _context.Values.ToListAsync();
+            var values = await _context.Values
+                .OrderBy(v => v.Category)
+                .ThenBy(v => v.Name)
+                .Select(v => new
+                {
+                    v.Id,
+                    v.Name,
+                    Category = v.Category.ToString(),
+                    v.ShortDefinition
+                })
+                .ToListAsync();
+
+            return Ok(values);
         }
 
         [HttpGet("{id}")]

@@ -1,0 +1,102 @@
+﻿@model ValueInsight.Frontend.Models.TeamReportViewModel
+@{
+    ViewData["Title"] = "Team Report";
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
+        <div>
+            <div class="vi-badge mb-3">Team report</div>
+            <h1 class="mb-2">@Model.TeamName</h1>
+            <p class="text-white-50 mb-0">Team size: @Model.TeamSize · Culture type: @Model.CultureType</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Take assessment</a>
+            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        </div>
+        <div class="row g-3">
+            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Alignment</div><div class="h3 mb-0">@Model.AlignmentScore.ToString("0.0")%</div></div></div>
+            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Polarization</div><div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")</div></div></div>
+            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Maturity</div><div class="h3 mb-0">@Model.MaturityIndex.ToString("0.0")</div></div></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Category profile</h2>
+                @foreach (var item in Model.CategoryProfile)
+                {
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>@item.Category</span>
+                            <span>@item.Percentage.ToString("0.0")%</span>
+                        </div>
+                        <div class="progress" style="height:10px; background: rgba(255,255,255,.08);">
+                            <div class="progress-bar" role="progressbar" style="width:@item.Percentage%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Shared core values</h2>
+                @if (Model.SharedCoreValues.Any())
+                {
+                    <ul class="text-white-50 mb-4">
+                        @foreach (var item in Model.SharedCoreValues)
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-white-50">No shared values are present across all team members yet.</p>
+                }
+
+                <h2 class="h5 mb-3">Tension fields</h2>
+                <ul class="text-white-50 mb-0">
+                    @foreach (var item in Model.TensionFields)
+                    {
+                        <li>@item</li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Top values</h2>
+                @foreach (var item in Model.TopValues)
+                {
+                    <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                        <div>
+                            <div class="fw-semibold">@item.Name</div>
+                            <div class="small text-white-50">@item.Category</div>
+                        </div>
+                        <div>@item.Rank</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Least represented values</h2>
+                @foreach (var item in Model.LowestValues)
+                {
+                    <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                        <div>
+                            <div class="fw-semibold">@item.Name</div>
+                            <div class="small text-white-50">@item.Category</div>
+                        </div>
+                        <div>@item.Rank</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,112 @@
+﻿@model ValueInsight.Frontend.Models.CoachingPromptsPageViewModel
+@{
+    ViewData["Title"] = "Coaching Prompts";
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="vi-badge mb-3">AI coaching</div>
+            <h1 class="mb-2">Coaching prompts for @Model.PersonalReport.UserName</h1>
+            <p class="text-white-50 mb-0">AI generated coachning.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-light" asp-action="Personal">Back to personal report</a>
+            <a class="btn vi-nav-cta" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Coaching context</h2>
+                <p><strong>Team:</strong> @(Model.PersonalReport.TeamName ?? "No team selected")</p>
+                <p><strong>Cultural fit:</strong> @(Model.PersonalReport.CulturalFitScore?.ToString("0.0") ?? "—")</p>
+                <p><strong>Alignment:</strong> @(Model.PersonalReport.AlignmentWithTeamTop5?.ToString("0.0") ?? "—")%</p>
+                <p><strong>Top values:</strong> @string.Join(", ", Model.PersonalReport.TopValues.OrderBy(x => x.Rank).Take(3).Select(x => x.Name))</p>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">AI coaching prompts</h2>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-warning mb-4">@Model.ErrorMessage</div>
+                }
+
+                @if (Model.CoachingResult != null)
+                {
+                    <div class="mb-4">
+                        <div class="small text-white-50">Alignment level</div>
+                        <div class="h4 mb-0">@Model.CoachingResult.AlignmentLevel</div>
+                    </div>
+
+                    @if (Model.CoachingResult.Strengths.Any())
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Strengths</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.Strengths)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (Model.CoachingResult.DevelopmentAreas.Any())
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Development areas</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.DevelopmentAreas)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (Model.CoachingResult.CoachingRecommendations.Any())
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Recommended actions</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.CoachingRecommendations)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.CoachingResult.AICoachingAdvice))
+                    {
+                        <div>
+                            <h3 class="h6 text-info-emphasis">Detailed AI advice</h3>
+                            <div class="text-white-50" style="white-space: pre-line;">@Model.CoachingResult.AICoachingAdvice</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">AI coaching prompts are not available right now.</p>
+                }
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4">
+                <h2 class="h5 mb-3">Suggested reflection prompts</h2>
+                <ul class="mb-0 text-white-50">
+                    @foreach (var item in Model.PersonalReport.CoachingQuestions)
+                    {
+                        <li class="mb-2">@item</li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>

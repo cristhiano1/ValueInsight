@@ -38,7 +38,10 @@ namespace ValueInsight.Backend.Services
             var aiAdvice = await GenerateAIRecommendations(request, response);
 
             if (!string.IsNullOrWhiteSpace(aiAdvice))
+            {
                 response.AICoachingAdvice = aiAdvice;
+                response.AIEnhanced = true;
+            }
 
             return response;
         }
