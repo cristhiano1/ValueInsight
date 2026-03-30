@@ -1,11 +1,13 @@
 ﻿@model ValueInsight.Frontend.Models.RegisterViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> SharedLocalizer
 
 @{
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = SharedLocalizer["Reg_Title"];
 }
 
 <div class="container mt-5" style="max-width: 500px;">
-    <h2 class="mb-4">Register</h2>
+    <h2 class="mb-4">@SharedLocalizer["Reg_Title"]</h2>
 
     <form asp-action="Register" method="post">
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -24,23 +26,26 @@
 
         <div class="mb-3">
             <label asp-for="Password" class="text-white"></label>
-            <input asp-for="Password" class="form-control" />
+            <input asp-for="Password" class="form-control" type="password" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
 
         <div class="mb-3">
             <label asp-for="TeamId" class="text-white"></label>
             <select asp-for="TeamId" class="form-select">
-                <option value="">-- optional --</option>
-                @foreach (var team in Model.Teams)
+                <option value="">-- @SharedLocalizer["Reg_Optional"] --</option>
+                @if (Model.Teams != null)
                 {
-                    <option value="@team.Id">@team.Name</option>
+                    foreach (var team in Model.Teams)
+                    {
+                        <option value="@team.Id">@team.Name</option>
+                    }
                 }
             </select>
             <span asp-validation-for="TeamId" class="text-danger"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">Register</button>
+        <button type="submit" class="btn btn-primary w-100">@SharedLocalizer["Reg_BtnSubmit"]</button>
     </form>
 </div>
 

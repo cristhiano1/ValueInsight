@@ -1,31 +1,34 @@
 ﻿@model ValueInsight.Frontend.Models.PersonalReportViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> SharedLocalizer
+
 @{
-    ViewData["Title"] = "My Value Report";
+    ViewData["Title"] = SharedLocalizer["Rep_PageTitle"];
 }
 
 <section class="container py-5 text-white">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-            <div class="vi-badge mb-3">Personal report</div>
-            <h1 class="mb-2">@Model.UserName's value profile</h1>
-            <p class="text-white-50 mb-0">Top ranked values, value profile, and team alignment.</p>
+            <div class="vi-badge mb-3">@SharedLocalizer["Rep_Badge"]</div>
+            <h1 class="mb-2">@Model.UserName @SharedLocalizer["Rep_TitleSuffix"]</h1>
+            <p class="text-white-50 mb-0">@SharedLocalizer["Rep_Subtitle"]</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Take assessment</a>
-            <a class="btn btn-outline-info" asp-action="CoachingPrompts">Coaching prompts</a>
-            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Back to dashboard</a>
+            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">@SharedLocalizer["Dash_BtnTakeAgain"]</a>
+            <a class="btn btn-outline-info" asp-action="CoachingPrompts">@SharedLocalizer["Rep_BtnCoach"]</a>
+            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">@SharedLocalizer["Rep_BtnDash"]</a>
         </div>
         <div class="vi-card-glass vi-card-glass--light p-3">
-            <div class="small text-white-50">Cultural fit</div>
+            <div class="small text-white-50">@SharedLocalizer["Dash_StatFit"]</div>
             <div class="display-6 text-white">@(Model.CulturalFitScore?.ToString("0.0") ?? "—")</div>
-            <div class="text-info-emphasis">@(!string.IsNullOrWhiteSpace(Model.CulturalFitLabel) ? Model.CulturalFitLabel : "No team match available yet")</div>
+            <div class="text-info-emphasis">@(!string.IsNullOrWhiteSpace(Model.CulturalFitLabel) ? Model.CulturalFitLabel : SharedLocalizer["Dash_NoTeamContext"])</div>
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-5">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Top 5 values</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["Rep_Top5Title"]</h2>
                 @foreach (var item in Model.TopValues)
                 {
                     <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
@@ -40,7 +43,7 @@
 
         <div class="col-lg-7">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Category profile</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["Rep_CatProfileTitle"]</h2>
                 @foreach (var item in Model.CategoryProfile)
                 {
                     <div class="mb-3">
@@ -58,35 +61,35 @@
 
         <div class="col-lg-7">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Value reflections</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["Rep_InsightsTitle"]</h2>
                 @if (Model.ReflectionInsights.Any())
                 {
                     @foreach (var insight in Model.ReflectionInsights)
                     {
                         <div class="mb-4">
                             <h3 class="h6 text-info-emphasis">@insight.ValueName</h3>
-                            <p class="mb-2"><strong>Meaning:</strong> @insight.Meaning</p>
-                            <p class="mb-2"><strong>Behavior:</strong> @insight.Behavior</p>
-                            <p class="mb-0"><strong>When ignored:</strong> @insight.Friction</p>
+                            <p class="mb-2"><strong>@SharedLocalizer["Rep_LabelMeaning"]:</strong> @insight.Meaning</p>
+                            <p class="mb-2"><strong>@SharedLocalizer["Rep_LabelBehavior"]:</strong> @insight.Behavior</p>
+                            <p class="mb-0"><strong>@SharedLocalizer["Rep_LabelFriction"]:</strong> @insight.Friction</p>
                         </div>
                     }
                 }
                 else
                 {
-                    <p class="text-white-50 mb-0">Complete your top-3 concretization to see deeper reflection insights.</p>
+                    <p class="text-white-50 mb-0">@SharedLocalizer["Rep_NoInsights"]</p>
                 }
             </div>
         </div>
 
         <div class="col-lg-5">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Team context</h2>
-                <p><strong>Team:</strong> @(Model.TeamName ?? "No team selected")</p>
-                <p><strong>Team culture:</strong> @(string.IsNullOrWhiteSpace(Model.TeamCultureType) ? "Not available yet" : Model.TeamCultureType)</p>
-                <p><strong>Team alignment:</strong> @(Model.AlignmentWithTeamTop5?.ToString("0.0") ?? "—")%</p>
+                <h2 class="h5 mb-3">@SharedLocalizer["Dash_QuickAccess"]</h2>
+                <p><strong>@SharedLocalizer["Dash_LabelTeam"]:</strong> @(Model.TeamName ?? SharedLocalizer["Dash_NoTeamSelected"])</p>
+                <p><strong>@SharedLocalizer["Dash_LabelCulture"]:</strong> @(string.IsNullOrWhiteSpace(Model.TeamCultureType) ? SharedLocalizer["Dash_NotAvailable"] : Model.TeamCultureType)</p>
+                <p><strong>@SharedLocalizer["Coach_Alignment"]:</strong> @(Model.AlignmentWithTeamTop5?.ToString("0.0") ?? "—")%</p>
                 @if (Model.TeamId.HasValue)
                 {
-                    <a class="btn btn-outline-light mt-2" asp-action="Team" asp-route-teamId="@Model.TeamId">Open team report</a>
+                    <a class="btn btn-outline-light mt-2" asp-action="Team" asp-route-teamId="@Model.TeamId">@SharedLocalizer["Dash_BtnTeamReport"]</a>
                 }
             </div>
         </div>

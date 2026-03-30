@@ -1,6 +1,29 @@
-﻿@{
-    ViewData["Title"] = "Privacy Policy";
-}
-<h1>@ViewData["Title"]</h1>
+﻿@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> SharedLocalizer
 
-<p>Use this page to detail your site's privacy policy.</p>
+@{
+    ViewData["Title"] = SharedLocalizer["Priv_PageTitle"];
+}
+
+<section class="container py-5 text-white">
+    <div class="vi-card-glass p-5">
+        <h1 class="mb-4">@SharedLocalizer["Priv_PageTitle"]</h1>
+
+        <p class="lead text-white-50">
+            @SharedLocalizer["Priv_Intro"]
+        </p>
+
+        <hr class="my-5 border-light opacity-10" />
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h2 class="h5">@SharedLocalizer["Priv_DataTitle"]</h2>
+                <p class="text-white-50">@SharedLocalizer["Priv_DataText"]</p>
+            </div>
+            <div class="col-md-6">
+                <h2 class="h5">@SharedLocalizer["Priv_SecurityTitle"]</h2>
+                <p class="text-white-50">@SharedLocalizer["Priv_SecurityText"]</p>
+            </div>
+        </div>
+    </div>
+</section>

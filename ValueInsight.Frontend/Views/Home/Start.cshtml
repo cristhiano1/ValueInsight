@@ -1,5 +1,8 @@
-﻿@{
-    ViewData["Title"] = "Reflection";
+﻿@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> SharedLocalizer
+
+@{
+    ViewData["Title"] = SharedLocalizer["Ref_PageTitle"];
 }
 
 <section class="vi-reflection">
@@ -9,81 +12,70 @@
             <div>
                 <div class="vi-badge">
                     <span class="vi-badge__dot"></span>
-                    Step 1 — Reflection
+                    @SharedLocalizer["Ref_Step1"]
                 </div>
-                <h1 class="mt-3 vi-ref-title">Reflection</h1>
+                <h1 class="mt-3 vi-ref-title">@SharedLocalizer["Ref_Title"]</h1>
                 <p class="vi-ref-subtitle">
-                    Take a few minutes to reflect.
+                    @SharedLocalizer["Ref_Subtitle"]
                 </p>
             </div>
 
             <div class="vi-save-indicator" aria-live="polite">
                 <span id="viSaveDot" class="vi-save-dot"></span>
-                <span id="viSaveText">Not saved yet</span>
+                <span id="viSaveText">@SharedLocalizer["Ref_SaveStatus_Idle"]</span>
             </div>
         </div>
 
         <div class="row g-4">
-            <!-- LEFT: questions -->
             <div class="col-lg-8">
                 <div class="vi-card-glass vi-card-glass--light">
-                    <h2 class="h5 fw-semibold mb-3">Reflection questions</h2>
+                    <h2 class="h5 fw-semibold mb-3">@SharedLocalizer["Ref_CardTitle"]</h2>
 
-                    <div class="vi-q mb-3">
-                        <label class="vi-label" for="q1">1) When do you feel most proud at work?</label>
-                        <textarea id="q1" class="form-control vi-textarea" rows="4"
-                                  placeholder="Write freely..."></textarea>
-                    </div>
-
-                    <div class="vi-q mb-3">
-                        <label class="vi-label" for="q2">2) What situations frustrate you the most?</label>
-                        <textarea id="q2" class="form-control vi-textarea" rows="4"
-                                  placeholder="Write freely..."></textarea>
-                    </div>
-
-                    <div class="vi-q mb-3">
-                        <label class="vi-label" for="q3">3) What needs to be true for you to perform at your best?</label>
-                        <textarea id="q3" class="form-control vi-textarea" rows="4"
-                                  placeholder="Write freely..."></textarea>
-                    </div>
-
-                    <div class="vi-q">
-                        <label class="vi-label" for="q4">4) Which behaviors do you find hard to tolerate?</label>
-                        <textarea id="q4" class="form-control vi-textarea" rows="4"
-                                  placeholder="Write freely..."></textarea>
-                    </div>
+                    @for (int i = 1; i <= 4; i++)
+                    {
+                        <div class="vi-q mb-3">
+                            <label class="vi-label" for="q@i">@SharedLocalizer[$"Ref_Q{i}"]</label>
+                            <textarea id="q@i" class="form-control vi-textarea" rows="4"
+                                  placeholder="@SharedLocalizer["Ref_Placeholder"]"></textarea>
+                        </div>
+                    }
 
                     <div class="d-flex flex-wrap gap-2 mt-4">
                         <button id="clearBtn" class="btn btn-outline-light" type="button">
-                            Clear answers
+                            @SharedLocalizer["Ref_BtnClear"]
                         </button>
 
                         <a class="btn btn-outline-light" asp-controller="Home" asp-action="Index">
-                            Back to Home
+                            @SharedLocalizer["Ref_BtnHome"]
                         </a>
 
                         <a class="btn vi-btn-primary ms-auto" asp-controller="ValuesFlow" asp-action="SelectTen">
-                            Next →
+                            @SharedLocalizer["Ref_BtnNext"] →
                         </a>
                     </div>
                 </div>
             </div>
-
-
         </div>
-
     </div>
 </section>
-
 
 @section Scripts {
     <script>
         (() => {
+            // Texter från SharedLocalizer för användning i JS
+            const uiTexts = {
+                saving: "@SharedLocalizer["Ref_SaveStatus_Saving"]",
+                saved: "@SharedLocalizer["Ref_SaveStatus_Saved"]",
+                idle: "@SharedLocalizer["Ref_SaveStatus_Idle"]",
+                confirmClear: "@SharedLocalizer["Ref_ConfirmClear"]",
+                locale: "@System.Globalization.CultureInfo.CurrentCulture.Name"
+            };
+
             const fields = [
-                { id: "q1", question: "When do you feel most proud at work?" },
-                { id: "q2", question: "What situations frustrate you the most?" },
-                { id: "q3", question: "What needs to be true for you to perform at your best?" },
-                { id: "q4", question: "Which behaviors do you find hard to tolerate?" }
+                { id: "q1", question: "@SharedLocalizer["Ref_Q1"]" },
+                { id: "q2", question: "@SharedLocalizer["Ref_Q2"]" },
+                { id: "q3", question: "@SharedLocalizer["Ref_Q3"]" },
+                { id: "q4", question: "@SharedLocalizer["Ref_Q4"]" }
             ];
 
             const saveDot = document.getElementById("viSaveDot");
@@ -95,14 +87,17 @@
             function setSavingUI(state, timestamp) {
                 saveDot.classList.remove("is-saving", "is-saved");
 
-                if (state === "saving") saveDot.classList.add("is-saving");
-                if (state === "saved") saveDot.classList.add("is-saved");
-
-                if (state === "saving") saveText.textContent = "Saving...";
-                if (state === "idle") saveText.textContent = "Not saved yet";
-                if (state === "saved") {
+                if (state === "saving") {
+                    saveDot.classList.add("is-saving");
+                    saveText.textContent = uiTexts.saving;
+                }
+                else if (state === "saved") {
+                    saveDot.classList.add("is-saved");
                     const t = timestamp ? new Date(timestamp) : new Date();
-                    saveText.textContent = "Saved " + t.toLocaleTimeString();
+                    saveText.textContent = uiTexts.saved + " " + t.toLocaleTimeString(uiTexts.locale);
+                }
+                else {
+                    saveText.textContent = uiTexts.idle;
                 }
             }
 
@@ -121,85 +116,57 @@
 
             function restoreToForm(items) {
                 if (!items || !Array.isArray(items)) return;
-
-                for (const a of items) {
+                items.forEach(a => {
                     const el = document.getElementById(a.questionId);
                     if (el) el.value = a.responseText ?? "";
-                }
-
-                setSavingUI("saved", new Date().toISOString());
+                });
+                setSavingUI("saved");
             }
 
             async function loadAnswers() {
                 try {
-                    const response = await fetch("/Reflection/Mine", {
-                        method: "GET",
-                        headers: { "Accept": "application/json" }
-                    });
-
-                    if (!response.ok) {
+                    const response = await fetch("/Reflection/Mine");
+                    if (response.ok) {
+                        const data = await response.json();
+                        restoreToForm(data);
+                    } else {
                         setSavingUI("idle");
-                        return;
                     }
-
-                    const data = await response.json();
-                    restoreToForm(data);
-                } catch {
-                    setSavingUI("idle");
-                }
+                } catch { setSavingUI("idle"); }
             }
 
             async function saveAnswers() {
                 const payload = collectPayload();
-
                 try {
                     const response = await fetch("/Reflection/Save", {
                         method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(payload)
                     });
-
-                    if (response.ok) {
-                        setSavingUI("saved", new Date().toISOString());
-                    } else {
-                        setSavingUI("idle");
-                    }
-                } catch {
-                    setSavingUI("idle");
-                }
+                    if (response.ok) setSavingUI("saved");
+                    else setSavingUI("idle");
+                } catch { setSavingUI("idle"); }
             }
 
             function scheduleSave() {
                 setSavingUI("saving");
-
                 if (saveTimer) clearTimeout(saveTimer);
-
-                saveTimer = setTimeout(() => {
-                    saveAnswers();
-                }, 500);
+                saveTimer = setTimeout(saveAnswers, 800);
             }
 
-            async function clearAll() {
-                for (const f of fields) {
-                    const el = document.getElementById(f.id);
-                    if (el) el.value = "";
-                }
-
-                setSavingUI("saving");
-                await saveAnswers();
-            }
-
-            for (const f of fields) {
-                const el = document.getElementById(f.id);
-                if (!el) continue;
-                el.addEventListener("input", scheduleSave);
-            }
+            // Bind events
+            fields.forEach(f => {
+                document.getElementById(f.id)?.addEventListener("input", scheduleSave);
+            });
 
             clearBtn?.addEventListener("click", async () => {
-                if (confirm("Clear all your saved reflection answers?")) {
-                    await clearAll();
+                if (confirm(uiTexts.confirmClear)) {
+                    fields.forEach(f => {
+                        const el = document.getElementById(f.id);
+                        if (el) el.value = "";
+                    });
+                    setSavingUI("saving");
+                    await saveAnswers();
                 }
             });
 

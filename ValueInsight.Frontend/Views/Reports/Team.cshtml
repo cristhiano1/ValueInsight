@@ -1,30 +1,51 @@
 ﻿@model ValueInsight.Frontend.Models.TeamReportViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> SharedLocalizer
+
 @{
-    ViewData["Title"] = "Team Report";
+    ViewData["Title"] = SharedLocalizer["TeamRep_PageTitle"];
 }
 
 <section class="container py-5 text-white">
     <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
         <div>
-            <div class="vi-badge mb-3">Team report</div>
+            <div class="vi-badge mb-3">@SharedLocalizer["TeamRep_Badge"]</div>
             <h1 class="mb-2">@Model.TeamName</h1>
-            <p class="text-white-50 mb-0">Team size: @Model.TeamSize · Culture type: @Model.CultureType</p>
+            <p class="text-white-50 mb-0">
+                @SharedLocalizer["TeamRep_Size"]: @Model.TeamSize · @SharedLocalizer["TeamRep_Culture"]: @Model.CultureType
+            </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Take assessment</a>
-            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">@SharedLocalizer["Dash_BtnTakeAgain"]</a>
+            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">@SharedLocalizer["Rep_BtnDash"]</a>
         </div>
-        <div class="row g-3">
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Alignment</div><div class="h3 mb-0">@Model.AlignmentScore.ToString("0.0")%</div></div></div>
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Polarization</div><div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")</div></div></div>
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Maturity</div><div class="h3 mb-0">@Model.MaturityIndex.ToString("0.0")</div></div></div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-auto">
+            <div class="vi-card-glass vi-card-glass--light p-3 text-center">
+                <div class="small text-white-50">@SharedLocalizer["TeamRep_StatAlignment"]</div>
+                <div class="h3 mb-0">@Model.AlignmentScore.ToString("0.0")%</div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="vi-card-glass vi-card-glass--light p-3 text-center">
+                <div class="small text-white-50">@SharedLocalizer["TeamRep_StatPolarization"]</div>
+                <div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")</div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <div class="vi-card-glass vi-card-glass--light p-3 text-center">
+                <div class="small text-white-50">@SharedLocalizer["TeamRep_StatMaturity"]</div>
+                <div class="h3 mb-0">@Model.MaturityIndex.ToString("0.0")</div>
+            </div>
         </div>
     </div>
 
     <div class="row g-4">
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Category profile</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["Rep_CatProfileTitle"]</h2>
                 @foreach (var item in Model.CategoryProfile)
                 {
                     <div class="mb-3">
@@ -42,7 +63,7 @@
 
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Shared core values</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["TeamRep_SharedValuesTitle"]</h2>
                 @if (Model.SharedCoreValues.Any())
                 {
                     <ul class="text-white-50 mb-4">
@@ -54,10 +75,10 @@
                 }
                 else
                 {
-                    <p class="text-white-50">No shared values are present across all team members yet.</p>
+                    <p class="text-white-50">@SharedLocalizer["TeamRep_NoSharedValues"]</p>
                 }
 
-                <h2 class="h5 mb-3">Tension fields</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["TeamRep_TensionsTitle"]</h2>
                 <ul class="text-white-50 mb-0">
                     @foreach (var item in Model.TensionFields)
                     {
@@ -69,7 +90,7 @@
 
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Top values</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["Rep_Top5Title"]</h2>
                 @foreach (var item in Model.TopValues)
                 {
                     <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
@@ -85,7 +106,7 @@
 
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Least represented values</h2>
+                <h2 class="h5 mb-3">@SharedLocalizer["TeamRep_LowestTitle"]</h2>
                 @foreach (var item in Model.LowestValues)
                 {
                     <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">

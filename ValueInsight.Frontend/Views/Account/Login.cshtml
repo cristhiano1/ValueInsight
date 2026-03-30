@@ -1,11 +1,13 @@
 ﻿@model ValueInsight.Frontend.Models.LoginViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> SharedLocalizer
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = SharedLocalizer["Log_Title"];
 }
 
 <div class="container mt-5" style="max-width: 500px;">
-    <h2 class="mb-4">Login</h2>
+    <h2 class="mb-4">@SharedLocalizer["Log_Title"]</h2>
 
     <form asp-action="Login" method="post">
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
@@ -18,11 +20,11 @@
 
         <div class="mb-3">
             <label asp-for="Password" class="text-white"></label>
-            <input asp-for="Password" class="form-control" />
+            <input asp-for="Password" class="form-control" type="password" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
 
-        <button type="submit" class="btn btn-primary w-100">Login</button>
+        <button type="submit" class="btn btn-primary w-100">@SharedLocalizer["Log_BtnSubmit"]</button>
     </form>
 </div>
 
