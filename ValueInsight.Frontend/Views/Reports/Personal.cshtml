@@ -1,0 +1,94 @@
+﻿@model ValueInsight.Frontend.Models.PersonalReportViewModel
+@{
+    ViewData["Title"] = "My Value Report";
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="vi-badge mb-3">Personal report</div>
+            <h1 class="mb-2">@Model.UserName's value profile</h1>
+            <p class="text-white-50 mb-0">Top ranked values, value profile, and team alignment.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Take assessment</a>
+            <a class="btn btn-outline-info" asp-action="CoachingPrompts">Coaching prompts</a>
+            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Back to dashboard</a>
+        </div>
+        <div class="vi-card-glass vi-card-glass--light p-3">
+            <div class="small text-white-50">Cultural fit</div>
+            <div class="display-6 text-white">@(Model.CulturalFitScore?.ToString("0.0") ?? "—")</div>
+            <div class="text-info-emphasis">@(!string.IsNullOrWhiteSpace(Model.CulturalFitLabel) ? Model.CulturalFitLabel : "No team match available yet")</div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Top 5 values</h2>
+                @foreach (var item in Model.TopValues)
+                {
+                    <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                        <div>
+                            <div class="fw-semibold">#@item.Rank @item.Name</div>
+                            <div class="small text-white-50">@item.Category</div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Category profile</h2>
+                @foreach (var item in Model.CategoryProfile)
+                {
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>@item.Category</span>
+                            <span>@item.Percentage.ToString("0.0")%</span>
+                        </div>
+                        <div class="progress" style="height:10px; background: rgba(255,255,255,.08);">
+                            <div class="progress-bar" role="progressbar" style="width:@item.Percentage%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Value reflections</h2>
+                @if (Model.ReflectionInsights.Any())
+                {
+                    @foreach (var insight in Model.ReflectionInsights)
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">@insight.ValueName</h3>
+                            <p class="mb-2"><strong>Meaning:</strong> @insight.Meaning</p>
+                            <p class="mb-2"><strong>Behavior:</strong> @insight.Behavior</p>
+                            <p class="mb-0"><strong>When ignored:</strong> @insight.Friction</p>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">Complete your top-3 concretization to see deeper reflection insights.</p>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Team context</h2>
+                <p><strong>Team:</strong> @(Model.TeamName ?? "No team selected")</p>
+                <p><strong>Team culture:</strong> @(string.IsNullOrWhiteSpace(Model.TeamCultureType) ? "Not available yet" : Model.TeamCultureType)</p>
+                <p><strong>Team alignment:</strong> @(Model.AlignmentWithTeamTop5?.ToString("0.0") ?? "—")%</p>
+                @if (Model.TeamId.HasValue)
+                {
+                    <a class="btn btn-outline-light mt-2" asp-action="Team" asp-route-teamId="@Model.TeamId">Open team report</a>
+                }
+            </div>
+        </div>
+    </div>
+</section>
