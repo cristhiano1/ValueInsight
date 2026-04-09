@@ -1,11 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿// JWT
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 using ValueInsight.Backend.Data;
 using ValueInsight.Backend.Services;
-
-// JWT
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -70,10 +70,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
-// ------------------------------
-// JWT AUTHENTICATION (AGREGADO)
-// ------------------------------
+// JWT AUTHENTICATION
 var jwtKey = builder.Configuration["Jwt:Key"];
 
 builder.Services.AddAuthentication(options =>
@@ -97,7 +94,9 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
 
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtKey))
+            Encoding.UTF8.GetBytes(jwtKey)),
+
+        RoleClaimType = ClaimTypes.Role
     };
 });
 
@@ -114,25 +113,31 @@ using (var scope = app.Services.CreateScope())
 }
 
 
-// Swagger
+// ------------------------------
+// ✅ FIX: SEED CON PASSWORD HASH
+// ------------------------------
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
+    var context = scope.ServiceProvider.GetRequiredService<ValueInsightDbContext>();
+    var passwordService = scope.ServiceProvider.GetRequiredService<PasswordService>();
 
-    app.UseSwaggerUI(c =>
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "ValueInsight.Backend v1");
-        c.RoutePrefix = "";
-    });
+    SeedData.SeedUsers(context, passwordService);
 }
+
+
+// Swagger
+app.UseSwagger();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ValueInsight.Backend v1");
+    c.RoutePrefix = "";
+});
 
 app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-
-// ------------------------------
-// JWT MIDDLEWARE (AGREGADO)
-// ------------------------------
+// JWT Middleware
 app.UseAuthentication();
 app.UseAuthorization();
 

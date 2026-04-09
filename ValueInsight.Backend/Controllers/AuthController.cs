@@ -24,8 +24,7 @@ namespace ValueInsight.Backend.Controllers
             _passwordService = passwordService;
         }
 
-
-
+        // ✅ REGISTER
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterRequest request)
         {
@@ -45,20 +44,22 @@ namespace ValueInsight.Backend.Controllers
             {
                 Name = request.Name,
                 Email = request.Email,
-                TeamId = request.TeamId
+                TeamId = request.TeamId,
+                Role = request.Role ?? "User"
             };
 
-            user.Password = _passwordService.HashPassword(user, request.Password);
+            // 🔥 HASH CORRECTO
+            user.PasswordHash = _passwordService.HashPassword(user, request.Password);
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
 
-            var token = _jwt.GenerateToken(user.Id, user.Email);
+            var token = _jwt.GenerateToken(user.Id, user.Email, user.Role);
 
             return Ok(new { token });
         }
 
-
+        // ✅ LOGIN
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginRequest request)
         {
@@ -68,12 +69,13 @@ namespace ValueInsight.Backend.Controllers
             if (user == null)
                 return Unauthorized("Invalid credentials");
 
-            var isValid = _passwordService.VerifyPassword(user, user.Password, request.Password);
+            // 🔥 VERIFY CORRECTO
+            var isValid = _passwordService.VerifyPassword(user, user.PasswordHash, request.Password);
 
             if (!isValid)
                 return Unauthorized("Invalid credentials");
 
-            var token = _jwt.GenerateToken(user.Id, user.Email);
+            var token = _jwt.GenerateToken(user.Id, user.Email, user.Role);
 
             return Ok(new { token });
         }

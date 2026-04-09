@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ValueInsight.Backend.Data;
 
@@ -11,9 +12,11 @@ using ValueInsight.Backend.Data;
 namespace ValueInsight.Backend.Migrations
 {
     [DbContext(typeof(ValueInsightDbContext))]
-    partial class ValueInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260404200511_AddUserRole")]
+    partial class AddUserRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,9 +70,6 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TeamId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -77,8 +77,6 @@ namespace ValueInsight.Backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TeamId");
 
                     b.HasIndex("UserId");
 
@@ -97,9 +95,6 @@ namespace ValueInsight.Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Rank")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.Property<int>("ValueId")
@@ -229,7 +224,7 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PasswordHash")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -789,19 +784,11 @@ namespace ValueInsight.Backend.Migrations
 
             modelBuilder.Entity("ValueInsight.Backend.Models.AssessmentRun", b =>
                 {
-                    b.HasOne("ValueInsight.Backend.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ValueInsight.Backend.Models.User", "User")
                         .WithMany("AssessmentRuns")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Team");
 
                     b.Navigation("User");
                 });

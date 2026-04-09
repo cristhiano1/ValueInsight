@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using ValueInsight.Backend.Data;
 using ValueInsight.Backend.Models;
 
@@ -18,6 +19,8 @@ namespace ValueInsight.Backend.Controllers
             _context = context;
         }
 
+        // 🔥 SOLO COACH
+        [Authorize(Roles = "Coach")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
@@ -26,9 +29,16 @@ namespace ValueInsight.Backend.Controllers
                 .ToListAsync();
         }
 
+        // 👤 USER (su propio perfil) + COACH
         [HttpGet("{id}")]
         public async Task<ActionResult<User>> GetUser(int id)
         {
+            var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            // ❌ si no es coach y no es su propio id → bloqueado
+            if (currentUserId != id && !User.IsInRole("Coach"))
+                return Forbid();
+
             var user = await _context.Users
                 .Include(u => u.UserValues)
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -39,6 +49,8 @@ namespace ValueInsight.Backend.Controllers
             return user;
         }
 
+        // 🔥 SOLO COACH
+        [Authorize(Roles = "Coach")]
         [HttpPost]
         public async Task<ActionResult<User>> CreateUser(User user)
         {
@@ -48,6 +60,8 @@ namespace ValueInsight.Backend.Controllers
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
         }
 
+        // 🔥 SOLO COACH
+        [Authorize(Roles = "Coach")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateUser(int id, User user)
         {
@@ -60,6 +74,8 @@ namespace ValueInsight.Backend.Controllers
             return NoContent();
         }
 
+        // 🔥 SOLO COACH
+        [Authorize(Roles = "Coach")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
