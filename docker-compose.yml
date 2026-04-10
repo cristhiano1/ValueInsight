@@ -1,4 +1,5 @@
-﻿version: "3.9"
+﻿
+version: "3.9"
 
 services:
   db:
@@ -6,7 +7,7 @@ services:
     container_name: valueinsight-db
     environment:
       - ACCEPT_EULA=Y
-      - SA_PASSWORD=Your_password123!
+      - SA_PASSWORD=${SA_PASSWORD}
     ports:
       - "1433:1433"
     volumes:
@@ -14,7 +15,7 @@ services:
     networks:
       - valueinsight-net
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P Your_password123! -C -Q 'SELECT 1' || exit 1"]
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P $$SA_PASSWORD -C -Q 'SELECT 1' || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 15
@@ -32,8 +33,12 @@ services:
         condition: service_healthy
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Server=db,1433;Database=ValueInsightDb;User Id=sa;Password=Your_password123!;TrustServerCertificate=True;Encrypt=False
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION}
+      - Jwt__Key=${JWT_KEY}
+      - Jwt__Issuer=${JWT_ISSUER}
+      - Jwt__Audience=${JWT_AUDIENCE}
+      - Jwt__ExpireMinutes=${JWT_EXPIRE_MINUTES:-60}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
     networks:
       - valueinsight-net
 
@@ -48,11 +53,10 @@ services:
       - backend
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ApiSettings__BaseUrl=http://backend:8080
+      - ApiSettings__BaseUrl=${API_BASE_URL}
     networks:
       - valueinsight-net
 
-  # 🔥 OPCIONAL — solo si usarán Ollama local
   ollama:
     image: ollama/ollama:latest
     container_name: valueinsight-ollama
