@@ -1,4 +1,4 @@
-﻿@model ValueInsight.Frontend.Models.DashboardViewModel
+﻿@* @model ValueInsight.Frontend.Models.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
 }
@@ -74,3 +74,33 @@
         </div>
     </div>
 </section>
+ *@
+public async Task<IActionResult>
+    Index()
+    {
+    var token = HttpContext.Session.GetString("JWToken");
+    var role = HttpContext.Session.GetString("Role");
+
+    if (string.IsNullOrWhiteSpace(token))
+    return RedirectToAction("Login", "Account");
+
+    var client = CreateAuthorizedClient();
+    var response = await client.GetAsync("/api/reports/dashboard");
+
+    if (!response.IsSuccessStatusCode)
+    return RedirectToAction("Personal", "Reports");
+
+    var json = await response.Content.ReadAsStringAsync();
+    var model = JsonSerializer.Deserialize<DashboardViewModel>
+        (json,
+        new JsonSerializerOptions
+        {
+        PropertyNameCaseInsensitive = true
+        }) ?? new DashboardViewModel();
+
+        // 👇 AQUI ESTA LA MAGIA
+        if (role == "Coach")
+        return View("Coach", model);
+
+        return View("User", model);
+        }

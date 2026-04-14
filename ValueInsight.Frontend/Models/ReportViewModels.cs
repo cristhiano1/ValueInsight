@@ -1,5 +1,5 @@
 ﻿namespace ValueInsight.Frontend.Models;
-
+using System.Text.Json.Serialization;
 public class CategoryScoreViewModel
 {
     public string Category { get; set; } = string.Empty;
@@ -77,6 +77,8 @@ public class TeamReportViewModel
     public double AlignmentScore { get; set; }
     public double PolarizationScore { get; set; }
     public double MaturityIndex { get; set; }
+
+    public string? TeamInsight { get; set; }
     public List<CategoryScoreViewModel> CategoryProfile { get; set; } = new();
     public List<RankedValueViewModel> TopValues { get; set; } = new();
     public List<RankedValueViewModel> LowestValues { get; set; } = new();
@@ -109,7 +111,15 @@ public class AssessmentHistoryItemViewModel
 
 public class DashboardViewModel
 {
+
+    // 🔵 COACH DASHBOARD (NUEVO)
+    public int TeamSize { get; set; }
+    public int PendingAssessments { get; set; }
+
+    public double? AlignmentScore { get; set; }
+    public double? PolarizationScore { get; set; }
     public string UserName { get; set; } = string.Empty;
+    [JsonPropertyName("completedAssessments")]
     public int AssessmentsCompleted { get; set; }
     public DateTime? LatestAssessmentCompletedAtUtc { get; set; }
     public int? TeamId { get; set; }

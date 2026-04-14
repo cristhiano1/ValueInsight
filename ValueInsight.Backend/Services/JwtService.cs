@@ -14,12 +14,16 @@ namespace ValueInsight.Backend.Services
             _config = config;
         }
 
-        public string GenerateToken(int userId, string email)
+        // 🔴 CAMBIO: ahora recibe role
+        public string GenerateToken(int userId, string email, string role)
         {
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Email, email)
+                new Claim(ClaimTypes.Email, email),
+
+                // Emit the role as the "role" claim (consistent with TokenValidationParameters.RoleClaimType = "role")
+                new Claim("role", role)
             };
 
             var key = new SymmetricSecurityKey(

@@ -6,8 +6,15 @@ using ValueInsight.Backend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+
+// 🔥 NECESARIO
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Prevent automatic inbound claim mapping (keep claim names as emitted in the token)
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 
 // Controllers
 builder.Services.AddControllers();
@@ -72,9 +79,11 @@ builder.Services.AddSwaggerGen(options =>
 
 
 // ------------------------------
-// JWT AUTHENTICATION (AGREGADO)
+// JWT AUTHENTICATION
 // ------------------------------
 var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+    throw new InvalidOperationException("Jwt:Key is not configured in configuration.");
 
 builder.Services.AddAuthentication(options =>
 {
@@ -97,7 +106,11 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"],
 
         IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(jwtKey))
+            Encoding.UTF8.GetBytes(jwtKey)
+        ),
+
+        // Use the plain "role" claim name (matches token emitted below)
+        RoleClaimType = "role"
     };
 });
 
@@ -105,12 +118,23 @@ var app = builder.Build();
 
 
 // ------------------------------
-// AUTO APPLY MIGRATIONS
+// AUTO APPLY MIGRATIONS (guarded)
 // ------------------------------
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<ValueInsightDbContext>();
-    db.Database.Migrate();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<ValueInsightDbContext>();
+        db.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        // Log and continue — avoids crashing the entire app silently on startup
+        logger.LogError(ex, "An error occurred while applying database migrations.");
+        // Re-throw if you prefer to stop startup:
+        // throw;
+    }
 }
 
 
@@ -129,10 +153,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 
-
-// ------------------------------
-// JWT MIDDLEWARE (AGREGADO)
-// ------------------------------
+// JWT middleware
 app.UseAuthentication();
 app.UseAuthorization();
 

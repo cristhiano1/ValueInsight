@@ -1,0 +1,84 @@
+﻿@model ValueInsight.Frontend.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "User Dashboard";
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
+        <div>
+            <div class="vi-badge mb-3">Dashboard</div>
+            <h1 class="mb-2">Welcome back, @Model.UserName</h1>
+            <p class="text-white-50 mb-0">Track your personal development and values.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Start assessment</a>
+            <a class="btn btn-outline-light" asp-controller="Reports" asp-action="Personal">My report</a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50">Assessments completed</div>
+                <div class="display-6">@Model.AssessmentsCompleted</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50">Latest assessment</div>
+                <div class="h4 mb-0">
+                    @(Model.LatestAssessmentCompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "Not completed yet")
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50">Cultural fit</div>
+                <div class="display-6">@Model.CulturalFitScore</div>
+                <div class="text-white-50">@Model.TeamCultureType</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Assessment history</h2>
+
+                @if (Model.AssessmentHistory.Any())
+                {
+                    @foreach (var item in Model.AssessmentHistory)
+                    {
+                        <div class="border-bottom border-light border-opacity-10 py-3">
+                            <div class="fw-semibold">
+                                @item.CompletedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </div>
+
+                            <div class="text-white-50">
+                                Top values: @string.Join(", ", item.TopValues)
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50">No assessments yet.</p>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Quick access</h2>
+
+                <div class="d-grid gap-2">
+                    <a class="btn btn-outline-light" asp-controller="Reports" asp-action="Personal">
+                        Personal report
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

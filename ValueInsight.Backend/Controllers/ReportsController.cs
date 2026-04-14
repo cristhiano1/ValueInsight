@@ -48,6 +48,7 @@ public class ReportsController : ControllerBase
 
         var userValues = user.UserValues.OrderBy(uv => uv.Rank).ToList();
         var categoryProfile = CultureAnalysisHelper.BuildNormalizedCategoryProfile(userValues);
+
         var report = new PersonalReportDto
         {
             UserId = user.Id,
@@ -100,6 +101,7 @@ public class ReportsController : ControllerBase
         {
             var teamReport = await _teamCultureService.BuildTeamReport(user.TeamId.Value);
             var fit = await _culturalFitService.CalculateForUser(userId);
+
             if (teamReport != null)
             {
                 report.TeamCultureType = teamReport.CultureType;
@@ -115,7 +117,6 @@ public class ReportsController : ControllerBase
 
         return Ok(report);
     }
-
 
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
@@ -167,7 +168,6 @@ public class ReportsController : ControllerBase
                 teamCulture = teamReport.CultureType;
         }
 
-
         var dto = new DashboardDto
         {
             UserName = user.Name,
@@ -186,6 +186,45 @@ public class ReportsController : ControllerBase
     [HttpGet("team/{teamId:int}")]
     public async Task<IActionResult> GetTeamReport(int teamId)
     {
+        // =========================
+        // 🔒 VALIDACIÓN ROLE
+        // =========================
+        var role = User.FindFirst(ClaimTypes.Role)?.Value;
+        if (role != "Coach")
+            return Forbid();
+
+        // =========================
+        // 🔒 VALIDACIÓN USER
+        // =========================
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out var userId))
+            return Unauthorized();
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null || user.TeamId != teamId)
+            return Forbid();
+
+        // =========================
+        // 📊 VALIDACIÓN TEAM DATA
+        // =========================
+        var teamUsers = await _context.Users
+            .Where(u => u.TeamId == teamId)
+            .Select(u => u.Id)
+            .ToListAsync();
+
+        var usersWithValues = await _context.UserValues
+            .Where(uv => teamUsers.Contains(uv.UserId))
+            .Select(uv => uv.UserId)
+            .Distinct()
+            .ToListAsync();
+
+        if (usersWithValues.Count == 0)
+            return BadRequest("No team data available yet.");
+
+        // =========================
+        // 📊 TU CÓDIGO ORIGINAL
+        // =========================
         var report = await _teamCultureService.BuildTeamReport(teamId);
         if (report == null)
             return NotFound();

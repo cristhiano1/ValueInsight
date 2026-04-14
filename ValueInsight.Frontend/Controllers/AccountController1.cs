@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using ValueInsight.Frontend.Models;
 
+
 namespace ValueInsight.Frontend.Controllers
 {
     public class AccountController : Controller
@@ -84,6 +85,12 @@ namespace ValueInsight.Frontend.Controllers
             if (result is not null && !string.IsNullOrWhiteSpace(result.Token))
             {
                 HttpContext.Session.SetString("JWToken", result.Token);
+
+                HttpContext.Session.SetString("Role", result.Role ?? "");
+                HttpContext.Session.SetString("Name", result.Name ?? "");
+
+                // 🔵 NUEVO (CLAVE)
+                HttpContext.Session.SetString("TeamId", result.TeamId?.ToString() ?? "");
             }
 
             return RedirectToAction("Index", "Dashboard");
@@ -131,6 +138,12 @@ namespace ValueInsight.Frontend.Controllers
             if (result is not null && !string.IsNullOrWhiteSpace(result.Token))
             {
                 HttpContext.Session.SetString("JWToken", result.Token);
+
+                HttpContext.Session.SetString("Role", result.Role ?? "");
+                HttpContext.Session.SetString("Name", result.Name ?? "");
+
+                // 🔵 NUEVO (CLAVE)
+                HttpContext.Session.SetString("TeamId", result.TeamId?.ToString() ?? "");
             }
 
             return RedirectToAction("Index", "Dashboard");
@@ -140,6 +153,10 @@ namespace ValueInsight.Frontend.Controllers
         public IActionResult Logout()
         {
             HttpContext.Session.Remove("JWToken");
+            HttpContext.Session.Remove("Role");
+            HttpContext.Session.Remove("Name");
+            HttpContext.Session.Remove("TeamId"); // 🔵 añadir también
+
             return RedirectToAction("Index", "Home");
         }
     }

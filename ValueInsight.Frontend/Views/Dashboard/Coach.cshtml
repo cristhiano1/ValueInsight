@@ -1,0 +1,76 @@
+﻿@model ValueInsight.Frontend.Models.DashboardViewModel
+@{
+    ViewData["Title"] = "Coach Dashboard";
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
+        <div>
+            <div class="vi-badge mb-3">Coach Dashboard</div>
+            <h1 class="mb-2">Welcome back, @Model.UserName</h1>
+            <p class="text-white-50 mb-0">Monitor your team, analyze culture, and guide development.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn vi-nav-cta" asp-controller="Reports" asp-action="Team">View Team Report</a>
+            <a class="btn btn-outline-light" asp-controller="Reports" asp-action="CoachingPrompts">Coaching Prompts</a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50">Assessments completed</div>
+                <div class="display-6">@Model.AssessmentsCompleted</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50">Team culture</div>
+                <div class="h4 mb-0">@Model.TeamCultureType</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50">Cultural fit avg</div>
+                <div class="display-6">@(Model.CulturalFitScore?.ToString("0.0") ?? "—")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Team overview</h2>
+                <p><strong>Team:</strong> @(Model.TeamName ?? "No team")</p>
+                <p><strong>Latest assessment:</strong> @(Model.LatestAssessmentCompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "No data")</p>
+
+                <p class="text-white-50 mt-3">
+                    Use the team report to analyze alignment, culture type, and potential risks.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Quick actions</h2>
+
+                <div class="d-grid gap-2">
+                    <a class="btn btn-outline-light"
+                       asp-controller="Reports"
+                       asp-action="Team"
+                       asp-route-teamId="@Model.TeamId">
+                        Team report
+                    </a>
+
+                    <a class="btn btn-outline-light"
+                       asp-controller="Reports"
+                       asp-action="CoachingPrompts">
+                        Coaching prompts
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

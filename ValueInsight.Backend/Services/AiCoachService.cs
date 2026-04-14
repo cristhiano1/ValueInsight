@@ -198,5 +198,80 @@ Respond in a professional tone.
                 return null;
             }
         }
+
+        // =========================
+        // ✅ NUEVO — TEAM INSIGHT
+        // =========================
+        public async Task<string?> GenerateTeamInsightAsync(TeamInsightDtos request)
+        {
+            try
+            {
+                var prompt = $"""
+You are an organizational psychologist specialized in team culture.
+
+Analyze the following team culture data and provide insights.
+
+Team Culture Type: {request.CultureType}
+Alignment Score: {request.AlignmentScore}
+Polarization Score: {request.PolarizationScore}
+Maturity Index: {request.MaturityIndex}
+
+Top Categories:
+{string.Join(", ", request.TopCategories)}
+
+Low Categories:
+{string.Join(", ", request.LowCategories)}
+
+Provide:
+1. Interpretation of the team culture
+2. Risks or tensions in the team
+3. Leadership recommendations
+4. Actions to improve alignment
+
+Keep it clear and practical.
+""";
+
+                return await GenerateRawAsync(prompt);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        // =========================
+        // ✅ NUEVO — RAW AI METHOD (FIX ERROR)
+        // =========================
+        public async Task<string?> GenerateRawAsync(string prompt)
+        {
+            try
+            {
+                var requestBody = new
+                {
+                    model = "llama3",
+                    prompt = prompt,
+                    stream = false
+                };
+
+                var json = JsonSerializer.Serialize(requestBody);
+
+                var response = await _httpClient.PostAsync(
+                    "http://ollama:11434/api/generate",
+                    new StringContent(json, Encoding.UTF8, "application/json"));
+
+                if (!response.IsSuccessStatusCode)
+                    return null;
+
+                var content = await response.Content.ReadAsStringAsync();
+
+                using var doc = JsonDocument.Parse(content);
+
+                return doc.RootElement.GetProperty("response").GetString();
+            }
+            catch
+            {
+                return null;
+            }
+        }
     }
 }

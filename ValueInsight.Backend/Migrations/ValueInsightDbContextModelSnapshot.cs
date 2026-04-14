@@ -49,7 +49,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasIndex("AssessmentRunId");
 
-                    b.ToTable("AssessmentReflectionAnswers");
+                    b.ToTable("AssessmentReflectionAnswers", (string)null);
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.AssessmentRun", b =>
@@ -77,7 +77,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AssessmentRuns");
+                    b.ToTable("AssessmentRuns", (string)null);
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.AssessmentValueSelection", b =>
@@ -103,7 +103,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasIndex("ValueId");
 
-                    b.ToTable("AssessmentValueSelections");
+                    b.ToTable("AssessmentValueSelections", (string)null);
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.CulturalFitResult", b =>
@@ -127,7 +127,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("CulturalFitResults");
+                    b.ToTable("CulturalFitResults", (string)null);
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.ReflectionAnswer", b =>
@@ -157,7 +157,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ReflectionAnswers");
+                    b.ToTable("ReflectionAnswers", (string)null);
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.Team", b =>
@@ -175,7 +175,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
 
                     b.HasData(
                         new
@@ -232,7 +232,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.UserValue", b =>
@@ -250,7 +250,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasIndex("ValueId");
 
-                    b.ToTable("UserValues");
+                    b.ToTable("UserValues", (string)null);
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.Value", b =>
@@ -279,7 +279,7 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Values");
+                    b.ToTable("Values", (string)null);
 
                     b.HasData(
                         new

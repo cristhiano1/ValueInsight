@@ -44,12 +44,19 @@ public class TeamReportDto
     public string TeamName { get; set; } = string.Empty;
     public int TeamSize { get; set; }
     public string CultureType { get; set; } = string.Empty;
+
     public double AlignmentScore { get; set; }
     public double PolarizationScore { get; set; }
     public double MaturityIndex { get; set; }
+
+    // ✅ NUEVO
+    public double DispersionScore { get; set; }
+    public double CompletionRate { get; set; }
+
     public List<CategoryScoreDto> CategoryProfile { get; set; } = new();
     public List<RankedValueDto> TopValues { get; set; } = new();
     public List<RankedValueDto> LowestValues { get; set; } = new();
+
     public List<string> SharedCoreValues { get; set; } = new();
     public List<string> TensionFields { get; set; } = new();
 }

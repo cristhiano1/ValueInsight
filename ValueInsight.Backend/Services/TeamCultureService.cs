@@ -71,17 +71,43 @@ public class TeamCultureService
         var alignment = CultureAnalysisHelper.CalculateAlignmentScore(top5Lists);
         var polarization = CultureAnalysisHelper.CalculatePolarization(teamProfile);
         var maturity = CultureAnalysisHelper.CalculateMaturityIndex(alignment, polarization, teamProfile);
-        var sharedValues = valueFrequency.Where(v => v.Rank == usersWithValues.Count && usersWithValues.Count > 0)
+
+        // =========================
+        // ✅ NUEVO — DISPERSION
+        // =========================
+        var dispersion = teamProfile.Values.Any()
+            ? teamProfile.Values.Max() - teamProfile.Values.Min()
+            : 0;
+
+        // =========================
+        // ✅ NUEVO — COMPLETION RATE
+        // =========================
+        var totalUsers = team.Users.Count;
+        var completedUsers = usersWithValues.Count;
+
+        var completionRate = totalUsers == 0
+            ? 0
+            : (double)completedUsers / totalUsers * 100;
+
+        var sharedValues = valueFrequency
+            .Where(v => v.Rank == usersWithValues.Count && usersWithValues.Count > 0)
             .Select(v => v.Name)
             .ToList();
 
         var tensionFields = new List<string>();
-        if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.22)
+
+        if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.22 &&
+            teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.22)
             tensionFields.Add("Autonomy vs structure");
-        if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.22)
+
+        if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.22 &&
+            teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.22)
             tensionFields.Add("Results vs relationships");
-        if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.20 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20)
+
+        if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.20 &&
+            teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20)
             tensionFields.Add("Innovation vs stability");
+
         if (!tensionFields.Any())
             tensionFields.Add("No major tension field detected yet");
 
@@ -94,13 +120,25 @@ public class TeamCultureService
             AlignmentScore = Math.Round(alignment * 100, 1),
             PolarizationScore = Math.Round(polarization * 100, 1),
             MaturityIndex = maturity,
+
+            // ✅ NUEVO
+            DispersionScore = Math.Round(dispersion * 100, 1),
+            CompletionRate = Math.Round(completionRate, 1),
+
             CategoryProfile = teamProfile.Select(kvp => new CategoryScoreDto
             {
                 Category = CultureAnalysisHelper.ToDisplayName(kvp.Key),
                 Percentage = Math.Round(kvp.Value * 100, 1)
             }).OrderByDescending(x => x.Percentage).ToList(),
+
             TopValues = valueFrequency.Take(5).ToList(),
-            LowestValues = valueFrequency.OrderBy(v => v.Rank).ThenBy(v => v.Name).Take(5).ToList(),
+
+            LowestValues = valueFrequency
+                .OrderBy(v => v.Rank)
+                .ThenBy(v => v.Name)
+                .Take(5)
+                .ToList(),
+
             SharedCoreValues = sharedValues,
             TensionFields = tensionFields
         };

@@ -8,23 +8,87 @@
         <div>
             <div class="vi-badge mb-3">Team report</div>
             <h1 class="mb-2">@Model.TeamName</h1>
-            <p class="text-white-50 mb-0">Team size: @Model.TeamSize · Culture type: @Model.CultureType</p>
+            <p class="text-white-50 mb-0">
+                Team size: @Model.TeamSize · Culture type: @Model.CultureType
+            </p>
+
+            <p class="text-white-50 mt-2">
+                Alignment indicates how much team members share similar top values.
+                High polarization may indicate conflicting priorities.
+            </p>
         </div>
+
         <div class="d-flex flex-wrap gap-2">
             <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Take assessment</a>
             <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
         </div>
+
         <div class="row g-3">
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Alignment</div><div class="h3 mb-0">@Model.AlignmentScore.ToString("0.0")%</div></div></div>
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Polarization</div><div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")</div></div></div>
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Maturity</div><div class="h3 mb-0">@Model.MaturityIndex.ToString("0.0")</div></div></div>
+            <div class="col-auto">
+                <div class="vi-card-glass vi-card-glass--light p-3 text-center">
+                    <div class="small text-white-50">Alignment</div>
+                    <div class="h3 mb-0">@Model.AlignmentScore.ToString("0.0")%</div>
+                    <div class="small text-white-50">
+                        @(Model.AlignmentScore > 70 ? "High alignment" :
+                                                Model.AlignmentScore > 40 ? "Moderate alignment" :
+                                                "Low alignment")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-auto">
+                <div class="vi-card-glass vi-card-glass--light p-3 text-center">
+                    <div class="small text-white-50">Polarization</div>
+                    <div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")</div>
+                    <div class="small text-white-50">
+                        @(Model.PolarizationScore > 0.7 ? "High tension" :
+                                                Model.PolarizationScore > 0.4 ? "Moderate tension" :
+                                                "Low tension")
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-auto">
+                <div class="vi-card-glass vi-card-glass--light p-3 text-center">
+                    <div class="small text-white-50">Maturity</div>
+                    <div class="h3 mb-0">@Model.MaturityIndex.ToString("0.0")</div>
+                    <div class="small text-white-50">
+                        @(Model.MaturityIndex > 0.7 ? "High maturity" :
+                                                Model.MaturityIndex > 0.4 ? "Developing" :
+                                                "Low maturity")
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <!-- ========================= -->
+    <!-- 🤖 NUEVO: AI TEAM INSIGHT -->
+    <!-- ========================= -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4">
+                <h2 class="h5 mb-3">AI Team Insight</h2>
+
+                @if (!string.IsNullOrWhiteSpace(Model.TeamInsight))
+                {
+                    <p class="text-white-50">@Model.TeamInsight</p>
+                }
+                else
+                {
+                    <p class="text-white-50">AI insight not available yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- RESTO IGUAL -->
     <div class="row g-4">
+
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Category profile</h2>
+
                 @foreach (var item in Model.CategoryProfile)
                 {
                     <div class="mb-3">
@@ -32,8 +96,10 @@
                             <span>@item.Category</span>
                             <span>@item.Percentage.ToString("0.0")%</span>
                         </div>
+
                         <div class="progress" style="height:10px; background: rgba(255,255,255,.08);">
-                            <div class="progress-bar" role="progressbar" style="width:@item.Percentage%"></div>
+                            <div class="progress-bar" role="progressbar"
+                                 style="width:@item.Percentage%"></div>
                         </div>
                     </div>
                 }
@@ -43,6 +109,7 @@
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Shared core values</h2>
+
                 @if (Model.SharedCoreValues.Any())
                 {
                     <ul class="text-white-50 mb-4">
@@ -54,22 +121,33 @@
                 }
                 else
                 {
-                    <p class="text-white-50">No shared values are present across all team members yet.</p>
+                    <p class="text-white-50">
+                        No shared values are present across all team members yet.
+                    </p>
                 }
 
                 <h2 class="h5 mb-3">Tension fields</h2>
-                <ul class="text-white-50 mb-0">
-                    @foreach (var item in Model.TensionFields)
-                    {
-                        <li>@item</li>
-                    }
-                </ul>
+
+                @if (Model.TensionFields.Any())
+                {
+                    <ul class="text-white-50 mb-0">
+                        @foreach (var item in Model.TensionFields)
+                        {
+                            <li>@item</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-white-50">No major tensions detected.</p>
+                }
             </div>
         </div>
 
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Top values</h2>
+
                 @foreach (var item in Model.TopValues)
                 {
                     <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
@@ -86,6 +164,7 @@
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Least represented values</h2>
+
                 @foreach (var item in Model.LowestValues)
                 {
                     <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
@@ -98,5 +177,6 @@
                 }
             </div>
         </div>
+
     </div>
 </section>
