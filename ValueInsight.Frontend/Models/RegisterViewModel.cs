@@ -14,10 +14,5 @@ namespace ValueInsight.Frontend.Models
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; } = string.Empty;
-
-        [Display(Name = "Team")]
-        public int? TeamId { get; set; }
-
-        public List<TeamOptionViewModel> Teams { get; set; } = new();
     }
 }

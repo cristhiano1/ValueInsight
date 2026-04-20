@@ -18,11 +18,6 @@ namespace ValueInsight.Backend.Controllers
             _context = context;
         }
 
-        //[HttpGet]
-        //public async Task<ActionResult<IEnumerable<Value>>> GetValues()
-        //{
-        //    return await _context.Values.ToListAsync();
-        //}
         [HttpGet]
         public async Task<IActionResult> GetValues()
         {

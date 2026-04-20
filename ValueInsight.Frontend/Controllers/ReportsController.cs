@@ -8,6 +8,58 @@ namespace ValueInsight.Frontend.Controllers;
 
 public class ReportsController : Controller
 {
+
+    private static PersonalReportViewModel NormalizePersonalReport(PersonalReportViewModel model)
+    {
+        model.TopValues ??= new();
+        model.CategoryProfile ??= new();
+        model.ReflectionInsights ??= new();
+        model.AssessmentHistory ??= new();
+        foreach (var item in model.AssessmentHistory)
+        {
+            item.TopValues ??= new();
+            item.CategoryProfile ??= new();
+            item.ReflectionInsights ??= new();
+            item.ReflectionQuestions ??= new();
+        }
+        model.ValueConflicts ??= new();
+        model.CoachingQuestions ??= new();
+        return model;
+    }
+
+    private static TeamReportViewModel NormalizeTeamReport(TeamReportViewModel model)
+    {
+        model.CategoryProfile ??= new();
+        model.TopValues ??= new();
+        model.LowestValues ??= new();
+        model.ValueFrequency ??= new();
+        model.SharedCoreValues ??= new();
+        model.TensionFields ??= new();
+        model.History ??= new();
+        model.Members ??= new();
+        model.HistorySummary ??= model.HistorySummary ?? new TeamHistorySummaryViewModel();
+        model.HistorySummary.PreviousTopValues ??= new();
+        model.HistorySummary.CurrentTopValues ??= new();
+        return model;
+    }
+
+    private static CoachingResponseViewModel NormalizeCoachingResponse(CoachingResponseViewModel model)
+    {
+        model.Strengths ??= new();
+        model.DevelopmentAreas ??= new();
+        model.CoachingRecommendations ??= new();
+        model.GoalSuggestions ??= new();
+        return model;
+    }
+
+    private static TeamCoachingResponseViewModel NormalizeTeamCoachingResponse(TeamCoachingResponseViewModel model)
+    {
+        model.Strengths ??= new();
+        model.Risks ??= new();
+        model.LeadershipAdvice ??= new();
+        model.SuggestedInterventions ??= new();
+        return model;
+    }
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IConfiguration _configuration;
 
@@ -43,11 +95,11 @@ public class ReportsController : Controller
             PropertyNameCaseInsensitive = true
         }) ?? new PersonalReportViewModel();
 
-        return View(model);
+        return View(NormalizePersonalReport(model));
     }
 
     [HttpGet]
-    public async Task<IActionResult> CoachingPrompts()
+    public async Task<IActionResult> CoachingPrompts(string? currentChallenge, string? currentGoal, string? linkedValue, string? goalRationale)
     {
         var client = CreateAuthorizedClient();
         var reportResponse = await client.GetAsync("/api/reports/me");
@@ -59,10 +111,15 @@ public class ReportsController : Controller
         {
             PropertyNameCaseInsensitive = true
         }) ?? new PersonalReportViewModel();
+        personalReport = NormalizePersonalReport(personalReport);
 
         var pageModel = new CoachingPromptsPageViewModel
         {
-            PersonalReport = personalReport
+            PersonalReport = personalReport,
+            CurrentChallenge = currentChallenge,
+            CurrentGoal = currentGoal,
+            LinkedValue = linkedValue,
+            GoalRationale = goalRationale
         };
 
         if (!personalReport.TeamId.HasValue)
@@ -71,16 +128,34 @@ public class ReportsController : Controller
             return View(pageModel);
         }
 
+        TeamReportViewModel? teamReport = null;
+        var teamResponse = await client.GetAsync($"/api/reports/team/{personalReport.TeamId.Value}");
+        if (teamResponse.IsSuccessStatusCode)
+        {
+            var teamJson = await teamResponse.Content.ReadAsStringAsync();
+            teamReport = JsonSerializer.Deserialize<TeamReportViewModel>(teamJson, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            if (teamReport != null) teamReport = NormalizeTeamReport(teamReport);
+        }
+
         var coachingRequest = new CoachingRequestViewModel
         {
             UserId = personalReport.UserId,
             TeamId = personalReport.TeamId.Value,
             AlignmentScore = personalReport.CulturalFitScore ?? personalReport.AlignmentWithTeamTop5 ?? 0,
-            DominantValues = personalReport.TopValues
-                .OrderBy(x => x.Rank)
-                .Take(3)
-                .Select(x => x.Name)
-                .ToList()
+            AlignmentWithTeamTop5 = personalReport.AlignmentWithTeamTop5,
+            TeamCultureType = personalReport.TeamCultureType,
+            CurrentChallenge = currentChallenge,
+            CurrentGoal = currentGoal,
+            LinkedValue = linkedValue,
+            GoalRationale = goalRationale,
+            DominantValues = personalReport.TopValues.OrderBy(x => x.Rank).Take(3).Select(x => x.Name).ToList(),
+            TeamTopValues = teamReport?.TopValues.OrderBy(x => x.Rank).Take(5).Select(x => x.Name).ToList() ?? new List<string>(),
+            TeamLowestValues = teamReport?.LowestValues.Select(x => x.Name).ToList() ?? new List<string>(),
+            TeamTensionFields = teamReport?.TensionFields ?? new List<string>(),
+            ReflectionInsights = personalReport.ReflectionInsights.SelectMany(x => new[] { x.Meaning, x.Behavior, x.Friction }).Where(x => !string.IsNullOrWhiteSpace(x)).ToList()
         };
 
         var coachingJson = JsonSerializer.Serialize(coachingRequest);
@@ -95,6 +170,7 @@ public class ReportsController : Controller
             {
                 PropertyNameCaseInsensitive = true
             });
+            if (pageModel.CoachingResult != null) pageModel.CoachingResult = NormalizeCoachingResponse(pageModel.CoachingResult);
         }
         else
         {
@@ -118,6 +194,65 @@ public class ReportsController : Controller
             PropertyNameCaseInsensitive = true
         }) ?? new TeamReportViewModel();
 
-        return View(model);
+        return View(NormalizeTeamReport(model));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TeamCoaching(int teamId)
+    {
+        var client = CreateAuthorizedClient();
+        var teamResponse = await client.GetAsync($"/api/reports/team/{teamId}");
+        if (!teamResponse.IsSuccessStatusCode)
+            return RedirectToAction(nameof(Personal));
+
+        var teamJson = await teamResponse.Content.ReadAsStringAsync();
+        var teamReport = JsonSerializer.Deserialize<TeamReportViewModel>(teamJson, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        }) ?? new TeamReportViewModel();
+        teamReport = NormalizeTeamReport(teamReport);
+
+        var pageModel = new TeamCoachingPageViewModel
+        {
+            TeamReport = teamReport
+        };
+
+        var coachingRequest = new TeamCoachingRequestViewModel
+        {
+            TeamId = teamReport.TeamId,
+            TeamName = teamReport.TeamName,
+            CultureType = teamReport.CultureType,
+            AlignmentScore = teamReport.AlignmentScore,
+            PolarizationScore = teamReport.PolarizationScore,
+            MaturityIndex = teamReport.MaturityIndex,
+            TeamSize = teamReport.TeamSize,
+            CompletedMembers = teamReport.CompletedMembers,
+            TotalMembers = teamReport.TotalMembers,
+            TopValues = teamReport.TopValues.OrderByDescending(x => x.Rank).Take(5).Select(x => x.Name).ToList(),
+            LowestValues = teamReport.LowestValues.Select(x => x.Name).ToList(),
+            SharedCoreValues = teamReport.SharedCoreValues,
+            TensionFields = teamReport.TensionFields
+        };
+
+        var coachingJson = JsonSerializer.Serialize(coachingRequest);
+        var coachingResponse = await client.PostAsync(
+            "/api/AiCoach/generate-team",
+            new StringContent(coachingJson, Encoding.UTF8, "application/json"));
+
+        if (coachingResponse.IsSuccessStatusCode)
+        {
+            var coachingContent = await coachingResponse.Content.ReadAsStringAsync();
+            pageModel.CoachingResult = JsonSerializer.Deserialize<TeamCoachingResponseViewModel>(coachingContent, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+            if (pageModel.CoachingResult != null) pageModel.CoachingResult = NormalizeTeamCoachingResponse(pageModel.CoachingResult);
+        }
+        else
+        {
+            pageModel.ErrorMessage = "Team AI coaching could not be generated right now. Review the team report data and try again.";
+        }
+
+        return View(pageModel);
     }
 }

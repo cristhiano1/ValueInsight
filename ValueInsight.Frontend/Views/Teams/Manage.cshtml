@@ -1,0 +1,146 @@
+﻿@model ValueInsight.Frontend.Models.TeamManagementViewModel
+@{
+    ViewData["Title"] = "Team Management";
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
+        <div>
+            <div class="vi-badge mb-3">Team management</div>
+            <h1 class="mb-2">@Model.TeamName</h1>
+            <p class="text-white-50 mb-0">Invite code: <strong>@Model.InviteCode</strong></p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-light" asp-controller="Teams" asp-action="Workspace">Team workspace</a>
+            @* <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a> *@
+            <a class="btn btn-outline-light" asp-controller="Reports" asp-action="Team" asp-route-teamId="@Model.TeamId">Open team report</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="alert alert-info">@Model.Message</div>
+    }
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-3"><div class="vi-card-glass vi-card-glass--light p-4 h-100"><div class="small text-white-50">Leader</div><div class="h5 mb-0">@(Model.LeaderName ?? "Not assigned")</div></div></div>
+        <div class="col-md-3"><div class="vi-card-glass vi-card-glass--light p-4 h-100"><div class="small text-white-50">Completion</div><div class="display-6">@Model.CompletedMembers / @Model.TotalMembers</div></div></div>
+        <div class="col-md-3"><div class="vi-card-glass vi-card-glass--light p-4 h-100"><div class="small text-white-50">Report status</div><div class="h5 mb-0">@(Model.TeamReportReady ? "Ready" : "Waiting")</div></div></div>
+        <div class="col-md-3"><div class="vi-card-glass vi-card-glass--light p-4 h-100"><div class="small text-white-50">Partial report</div><div class="h5 mb-0">@(Model.AllowPartialReport ? "Enabled" : "Disabled")</div></div></div>
+    </div>
+
+    @if (!Model.CanManage)
+    {
+        <div class="alert alert-warning">You can view this team, but only the team leader or admin can manage it.</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Members</h2>
+                    <span class="text-white-50">@Model.Members.Count member(s)</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-dark table-borderless align-middle">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Leader</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var member in Model.Members)
+                            {
+                                <tr>
+                                    <td>@member.Name</td>
+                                    <td>@member.Email</td>
+                                    <td>
+                                        <span class="badge @(member.HasCompletedAssessment ? "bg-success" : "bg-secondary")">
+                                            @(member.HasCompletedAssessment ? "Completed" : "Pending")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (member.IsLeader)
+                                        {
+                                            <span class="badge bg-info">Leader</span>
+                                        }
+                                        else if (Model.CanManage)
+                                        {
+                                            <form asp-action="AssignLeader" method="post" class="d-inline">
+                                                <input type="hidden" name="teamId" value="@Model.TeamId" />
+                                                <input type="hidden" name="userId" value="@member.Id" />
+                                                <button type="submit" class="btn btn-sm btn-outline-light">Make leader</button>
+                                            </form>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (Model.CanManage)
+                {
+                    <hr class="border-light border-opacity-10 my-4" />
+                    <h2 class="h5 mb-3">Report controls</h2>
+                    <form asp-action="SetPartialReport" method="post" class="row g-3 align-items-end">
+                        <input type="hidden" name="teamId" value="@Model.TeamId" />
+                        <div class="col-sm-8">
+                            <label class="form-label">Allow team report before everyone finishes</label>
+                            <select name="allowPartialReport" class="form-select">
+                                <option value="false" selected="@(!Model.AllowPartialReport)">Disabled</option>
+                                <option value="true" selected="@(Model.AllowPartialReport)">Enabled</option>
+                            </select>
+                        </div>
+                        <div class="col-sm-4 d-grid">
+                            <button type="submit" class="btn vi-nav-cta">Save policy</button>
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Pending join requests</h2>
+                    <span class="text-white-50">@Model.PendingJoinRequests.Count request(s)</span>
+                </div>
+                @if (Model.PendingJoinRequests.Any())
+                {
+                    @foreach (var request in Model.PendingJoinRequests)
+                    {
+                        <div class="border-bottom border-light border-opacity-10 py-3">
+                            <div class="fw-semibold">@request.UserName</div>
+                            <div class="text-white-50 small mb-2">@request.UserEmail · @request.RequestedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                            @if (Model.CanManage)
+                            {
+                                <div class="d-flex gap-2">
+                                    <form asp-action="ReviewJoinRequest" method="post">
+                                        <input type="hidden" name="teamId" value="@Model.TeamId" />
+                                        <input type="hidden" name="requestId" value="@request.Id" />
+                                        <input type="hidden" name="approve" value="true" />
+                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                    </form>
+                                    <form asp-action="ReviewJoinRequest" method="post">
+                                        <input type="hidden" name="teamId" value="@Model.TeamId" />
+                                        <input type="hidden" name="requestId" value="@request.Id" />
+                                        <input type="hidden" name="approve" value="false" />
+                                        <button type="submit" class="btn btn-sm btn-outline-light">Reject</button>
+                                    </form>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">No pending join requests.</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>

@@ -60,6 +60,9 @@ namespace ValueInsight.Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime?>("CompletedAtUtc")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -168,6 +171,17 @@ namespace ValueInsight.Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AllowPartialReport")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("InviteCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("LeaderId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(120)
@@ -175,34 +189,115 @@ namespace ValueInsight.Backend.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("InviteCode")
+                        .IsUnique();
+
+                    b.HasIndex("LeaderId");
+
                     b.ToTable("Teams");
 
                     b.HasData(
                         new
                         {
                             Id = 1,
+                            AllowPartialReport = false,
+                            InviteCode = "ENG001",
                             Name = "Engineering"
                         },
                         new
                         {
                             Id = 2,
+                            AllowPartialReport = false,
+                            InviteCode = "PROD001",
                             Name = "Product"
                         },
                         new
                         {
                             Id = 3,
+                            AllowPartialReport = false,
+                            InviteCode = "DES001",
                             Name = "Design"
                         },
                         new
                         {
                             Id = 4,
+                            AllowPartialReport = false,
+                            InviteCode = "MKT001",
                             Name = "Marketing"
                         },
                         new
                         {
                             Id = 5,
+                            AllowPartialReport = false,
+                            InviteCode = "OPS001",
                             Name = "Operations"
                         });
+                });
+
+            modelBuilder.Entity("ValueInsight.Backend.Models.TeamJoinRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("RequestedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReviewedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("ReviewedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeamId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("TeamJoinRequests");
+                });
+
+            modelBuilder.Entity("ValueInsight.Backend.Models.TeamMember", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("HasCompletedAssessment")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("JoinedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("TeamId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("TeamMembers");
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.User", b =>
@@ -217,6 +312,9 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -225,12 +323,7 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("TeamId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
-
-                    b.HasIndex("TeamId");
 
                     b.ToTable("Users");
                 });
@@ -827,13 +920,52 @@ namespace ValueInsight.Backend.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ValueInsight.Backend.Models.User", b =>
+            modelBuilder.Entity("ValueInsight.Backend.Models.Team", b =>
+                {
+                    b.HasOne("ValueInsight.Backend.Models.User", "Leader")
+                        .WithMany("LedTeams")
+                        .HasForeignKey("LeaderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Leader");
+                });
+
+            modelBuilder.Entity("ValueInsight.Backend.Models.TeamJoinRequest", b =>
                 {
                     b.HasOne("ValueInsight.Backend.Models.Team", "Team")
-                        .WithMany("Users")
-                        .HasForeignKey("TeamId");
+                        .WithMany("JoinRequests")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ValueInsight.Backend.Models.User", "User")
+                        .WithMany("JoinRequests")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Team");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ValueInsight.Backend.Models.TeamMember", b =>
+                {
+                    b.HasOne("ValueInsight.Backend.Models.Team", "Team")
+                        .WithMany("Members")
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ValueInsight.Backend.Models.User", "User")
+                        .WithMany("TeamMemberships")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Team");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.UserValue", b =>
@@ -866,12 +998,20 @@ namespace ValueInsight.Backend.Migrations
                 {
                     b.Navigation("CulturalFitResults");
 
-                    b.Navigation("Users");
+                    b.Navigation("JoinRequests");
+
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("ValueInsight.Backend.Models.User", b =>
                 {
                     b.Navigation("AssessmentRuns");
+
+                    b.Navigation("JoinRequests");
+
+                    b.Navigation("LedTeams");
+
+                    b.Navigation("TeamMemberships");
 
                     b.Navigation("UserValues");
                 });

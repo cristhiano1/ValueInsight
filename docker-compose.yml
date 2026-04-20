@@ -39,6 +39,9 @@ services:
       - Jwt__Audience=${JWT_AUDIENCE}
       - Jwt__ExpireMinutes=${JWT_EXPIRE_MINUTES:-60}
       - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - SeedAdmin__Name=${SEED_ADMIN_NAME}
+      - SeedAdmin__Email=${SEED_ADMIN_EMAIL}
+      - SeedAdmin__Password=${SEED_ADMIN_PASSWORD}
     networks:
       - valueinsight-net
 
@@ -62,11 +65,14 @@ services:
     container_name: valueinsight-ollama
     ports:
       - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
     networks:
       - valueinsight-net
 
 volumes:
   sqldata:
+  ollama_data:
 
 networks:
   valueinsight-net:

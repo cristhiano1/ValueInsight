@@ -21,7 +21,6 @@ public class AiCoachController : ControllerBase
         _logger = logger;
     }
 
-    // POST: api/AiCoach/generate
     [HttpPost("generate")]
     public async Task<ActionResult<CoachingResponseDtos>> GenerateCoaching([FromBody] CoachingRequestDtos request)
     {
@@ -39,12 +38,33 @@ public class AiCoachController : ControllerBase
                 request.TeamId);
 
             var result = await _aiCoachService.GenerateCoachingAsync(request);
-
             return Ok(result);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error generating coaching plan.");
+            return StatusCode(500, "Internal server error");
+        }
+    }
+
+    [HttpPost("generate-team")]
+    public async Task<ActionResult<TeamCoachingResponseDtos>> GenerateTeamCoaching([FromBody] TeamCoachingRequestDtos request)
+    {
+        if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Invalid team coaching request received.");
+            return BadRequest(ModelState);
+        }
+
+        try
+        {
+            _logger.LogInformation("Generating team coaching plan for team {TeamId}", request.TeamId);
+            var result = await _aiCoachService.GenerateTeamCoachingAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating team coaching plan.");
             return StatusCode(500, "Internal server error");
         }
     }
