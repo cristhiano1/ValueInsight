@@ -1,6 +1,10 @@
 ﻿@model ValueInsight.Frontend.Models.PersonalReportViewModel
 @{
-    ViewData["Title"] = "My Value Report";
+    ViewData["Title"] = "Personal Report";
+    var canManageWorkspace = Model.IsAdmin || Model.IsTeamLeader;
+    var canOpenTeamReport = Model.TeamId.HasValue && (Model.TeamReportReady || canManageWorkspace);
+    var roleLabel = Model.IsAdmin ? "Admin" : Model.IsTeamLeader ? "Team leader" : "Member";
+    var latestAssessment = Model.AssessmentHistory.OrderByDescending(x => x.CompletedAtUtc).FirstOrDefault();
 }
 
 <section class="container py-5 text-white">
@@ -8,32 +12,76 @@
         <div>
             <div class="vi-badge mb-3">Personal report</div>
             <h1 class="mb-2">@Model.UserName's value profile</h1>
-            <p class="text-white-50 mb-0">Top ranked values, value profile, and team alignment.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Take assessment</a>
-            <a class="btn btn-outline-info" asp-action="CoachingPrompts">Coaching prompts</a>
-            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Back to dashboard</a>
-        </div>
-        <div class="vi-card-glass vi-card-glass--light p-3">
-            <div class="small text-white-50">Cultural fit</div>
-            <div class="display-6 text-white">@(Model.CulturalFitScore?.ToString("0.0") ?? "—")</div>
-            <div class="text-info-emphasis">@(!string.IsNullOrWhiteSpace(Model.CulturalFitLabel) ? Model.CulturalFitLabel : "No team match available yet")</div>
+            <a class="btn vi-nav-cta" asp-action="CoachingPrompts">User coaching</a>
+            @if (canOpenTeamReport)
+            {
+                <a class="btn vi-nav-cta" asp-action="Team" asp-route-teamId="@Model.TeamId">Team report</a>
+            }
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50 mb-2">Role and team</div>
+                <div class="h4 mb-1">@roleLabel</div>
+                <div class="text-white-50">@(Model.TeamName ?? "No team")</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50 mb-2">Cultural fit</div>
+                <div class="display-6 text-white">@(Model.CulturalFitScore?.ToString("0.0") ?? "—")</div>
+                <div class="text-white-50">@(!string.IsNullOrWhiteSpace(Model.CulturalFitLabel) ? Model.CulturalFitLabel : "No team match available yet")</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50 mb-2">Team report status</div>
+                @if (Model.TeamId.HasValue)
+                {
+                    <div class="h4 mb-1">@(Model.TeamReportReady ? "Available" : "In progress")</div>
+                    <div class="text-white-50">
+                        @if (canManageWorkspace)
+                        {
+                            <span>Completion: @Model.TeamMembersCompleted / @Model.TeamMembersTotal</span>
+                        }
+                        else
+                        {
+                            <span>@(Model.TeamReportReady ? "Your team insights are ready to review." : "Team insights will appear after more participation.")</span>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="h4 mb-1">No team linked</div>
+                    <div class="text-white-50">Join a team when you want team-level comparisons and reporting.</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
         <div class="col-lg-5">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Top 5 values</h2>
-                @foreach (var item in Model.TopValues)
+                @if (Model.TopValues.Any())
                 {
-                    <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
-                        <div>
-                            <div class="fw-semibold">#@item.Rank @item.Name</div>
-                            <div class="small text-white-50">@item.Category</div>
+                    @foreach (var item in Model.TopValues)
+                    {
+                        <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                            <div>
+                                <div class="fw-semibold">#@item.Rank @item.Name</div>
+                                <div class="small text-white-50">@item.Category</div>
+                            </div>
                         </div>
-                    </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">Complete the assessment to generate your top value profile.</p>
                 }
             </div>
         </div>
@@ -41,24 +89,72 @@
         <div class="col-lg-7">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Category profile</h2>
-                @foreach (var item in Model.CategoryProfile)
+                @if (Model.CategoryProfile.Any())
                 {
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>@item.Category</span>
-                            <span>@item.Percentage.ToString("0.0")%</span>
+                    @foreach (var item in Model.CategoryProfile)
+                    {
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span>@item.Category</span>
+                                <span>@item.Percentage.ToString("0.0")%</span>
+                            </div>
+                            <div class="progress" style="height:10px; background: rgba(255,255,255,.08);">
+                                <div class="progress-bar" role="progressbar" style="width:@item.Percentage%"></div>
+                            </div>
                         </div>
-                        <div class="progress" style="height:10px; background: rgba(255,255,255,.08);">
-                            <div class="progress-bar" role="progressbar" style="width:@item.Percentage%"></div>
-                        </div>
-                    </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">Your category profile will appear after completing the assessment.</p>
                 }
             </div>
         </div>
 
-        <div class="col-lg-7">
-            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Value reflections</h2>
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4">
+                <h2 class="h5 mb-3">Value tensions</h2>
+                @if (Model.ValueConflicts.Any())
+                {
+                    <ul class="mb-0 text-white-50">
+                        @foreach (var item in Model.ValueConflicts)
+                        {
+                            <li class="mb-2">@item</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">No major internal value tensions identified yet.</p>
+                }
+            </div>
+        </div>
+
+
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4">
+                <h2 class="h5 mb-3">Reflection questions</h2>
+                @if (latestAssessment?.ReflectionQuestions?.Any() == true)
+                {
+                    @foreach (var answer in latestAssessment.ReflectionQuestions)
+                    {
+                        <div class="border-bottom border-light border-opacity-10 py-3">
+                            <div class="fw-semibold mb-2">@answer.QuestionText</div>
+                            <div class="text-white-50" style="white-space: pre-line;">@answer.ResponseText</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">Complete the reflection step to see your assessment answers here.</p>
+                }
+            </div>
+
+        </div>
+
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4">
+                <h2 class="h5 mb-3">Concretize top 3 values</h2>
                 @if (Model.ReflectionInsights.Any())
                 {
                     @foreach (var insight in Model.ReflectionInsights)
@@ -78,17 +174,174 @@
             </div>
         </div>
 
-        <div class="col-lg-5">
+        <div class="col-12">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Team context</h2>
-                <p><strong>Team:</strong> @(Model.TeamName ?? "No team selected")</p>
-                <p><strong>Team culture:</strong> @(string.IsNullOrWhiteSpace(Model.TeamCultureType) ? "Not available yet" : Model.TeamCultureType)</p>
-                <p><strong>Team alignment:</strong> @(Model.AlignmentWithTeamTop5?.ToString("0.0") ?? "—")%</p>
-                @if (Model.TeamId.HasValue)
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-3">
+                    <div>
+                        <h2 class="h5 mb-1">Assessment history</h2>
+                        
+                    </div>
+                    @if (Model.AssessmentHistory.Any())
+                    {
+
+                       
+                        <select id="historySelector" class="form-select bg-dark text-white border-secondary">
+                            <option value="">Select a completed assessment</option>
+                            @foreach (var item in Model.AssessmentHistory.OrderByDescending(x => x.CompletedAtUtc))
+                            {
+                                <option value="run-@item.AssessmentRunId">
+                                    Run #@item.AssessmentRunId · @item.CompletedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                </option>
+                            }
+                        </select>
+
+                    }
+                </div>
+
+                @if (Model.AssessmentHistory.Any())
                 {
-                    <a class="btn btn-outline-light mt-2" asp-action="Team" asp-route-teamId="@Model.TeamId">Open team report</a>
+
+                    @foreach (var item in Model.AssessmentHistory.OrderByDescending(x => x.CompletedAtUtc))
+                    {
+                        <div class="history-run" id="run-@item.AssessmentRunId" style="display:none;">
+                            <div class="mb-3 d-flex flex-wrap gap-2" id="historyTabBar" style="display:none;">
+                                <button type="button" class="btn btn-outline-light history-tab-btn active" data-history-tab="summary">Summary</button>
+                                @*<button  type="button" class="btn btn-outline-light history-tab-btn" data-history-tab="reflectionQuestions">Reflection questions</button> *@
+                                <button type="button" class="btn btn-outline-light history-tab-btn" data-history-tab="topValueDetails">Top value details</button>
+                            </div>
+                            <div class="history-panel" data-panel="summary">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+                                    <div class="fw-semibold">Run #@item.AssessmentRunId · @item.CompletedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                                    <div class="text-white-50">Primary category: @item.PrimaryCategory</div>
+                                </div>
+                                <div class="mb-3 text-white-50">Top values: @string.Join(", ", item.TopValues)</div>
+                                @if (item.CategoryProfile.Any())
+                                {
+                                    @foreach (var category in item.CategoryProfile)
+                                    {
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span>@category.Category</span>
+                                                <span>@category.Percentage.ToString("0.0")%</span>
+                                            </div>
+                                            <div class="progress" style="height:10px; background: rgba(255,255,255,.08);">
+                                                <div class="progress-bar" role="progressbar" style="width:@category.Percentage%"></div>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-white-50 mb-0">No category snapshot stored for this assessment.</p>
+                                }
+                            </div>
+
+                            <div class="history-panel" data-panel="reflectionQuestions" style="display:none;">
+                                @if (item.ReflectionQuestions.Any())
+                                {
+                                    @foreach (var answer in item.ReflectionQuestions)
+                                    {
+                                        <div class="border-bottom border-light border-opacity-10 py-3">
+                                            <div class="fw-semibold mb-2">@answer.QuestionText</div>
+                                            <div class="text-white-50" style="white-space: pre-line;">@answer.ResponseText</div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-white-50 mb-0">No reflection-question answers were stored for this assessment.</p>
+                                }
+                            </div>
+
+                            <div class="history-panel" data-panel="topValueDetails" style="display:none;">
+                                @if (item.ReflectionInsights.Any())
+                                {
+                                    @foreach (var insight in item.ReflectionInsights)
+                                    {
+                                        <div class="mb-4">
+                                            <h3 class="h6 text-info-emphasis">@insight.ValueName</h3>
+                                            <p class="mb-2"><strong>Meaning:</strong> @insight.Meaning</p>
+                                            <p class="mb-2"><strong>Behavior:</strong> @insight.Behavior</p>
+                                            <p class="mb-0"><strong>When ignored:</strong> @insight.Friction</p>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-white-50 mb-0">No top-value reflection details were stored for this assessment.</p>
+                                }
+                            </div>
+                        </div>
+
+                    }
                 }
+                else
+                {
+                    <p class="text-white-50 mb-0">No completed assessments yet. Start your first assessment to build your report history.</p>
+                }
+
+                @* <div id="historyEmptyState" class="text-white-50 small mt-3">Select a completed assessment to view its reports.</div> *@
             </div>
         </div>
     </div>
+
 </section>
+
+@if (Model.AssessmentHistory.Any())
+{
+    <script>
+        (function () {
+            const selector = document.getElementById('historySelector');
+            const runSections = Array.from(document.querySelectorAll('.history-run'));
+            const tabButtons = Array.from(document.querySelectorAll('.history-tab-btn'));
+            const tabBar = document.getElementById('historyTabBar');
+            const emptyState = document.getElementById('historyEmptyState');
+            let activePanel = 'summary';
+
+            function showRun(runId) {
+                const hasSelection = !!runId;
+
+                runSections.forEach(section => {
+                    section.style.display = hasSelection && section.id === runId ? 'block' : 'none';
+                });
+
+                if (tabBar) {
+                    tabBar.style.display = hasSelection ? 'flex' : 'none';
+                }
+
+                if (emptyState) {
+                    emptyState.style.display = hasSelection ? 'none' : 'block';
+                }
+
+                if (hasSelection) {
+                    showPanel(activePanel);
+                }
+            }
+
+            function showPanel(panelName) {
+                activePanel = panelName;
+                tabButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.historyTab === panelName));
+
+                const visibleRun = runSections.find(section => section.style.display !== 'none');
+                if (!visibleRun) return;
+
+                visibleRun.querySelectorAll('.history-panel').forEach(panel => {
+                    panel.style.display = panel.dataset.panel === panelName ? 'block' : 'none';
+                });
+            }
+
+            if (selector) {
+                selector.addEventListener('change', function () {
+                    showRun(this.value);
+                });
+                showRun(selector.value);
+            }
+
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    showPanel(this.dataset.historyTab);
+                });
+            });
+        })();
+    </script>
+}

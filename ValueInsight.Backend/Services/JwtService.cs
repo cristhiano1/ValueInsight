@@ -14,12 +14,13 @@ namespace ValueInsight.Backend.Services
             _config = config;
         }
 
-        public string GenerateToken(int userId, string email)
+        public string GenerateToken(int userId, string email, bool isAdmin = false)
         {
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Email, email)
+                new Claim(ClaimTypes.Email, email),
+                new Claim("isAdmin", isAdmin.ToString().ToLowerInvariant())
             };
 
             var key = new SymmetricSecurityKey(

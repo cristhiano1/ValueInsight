@@ -8,34 +8,62 @@
         <div>
             <div class="vi-badge mb-3">Team report</div>
             <h1 class="mb-2">@Model.TeamName</h1>
-            <p class="text-white-50 mb-0">Team size: @Model.TeamSize · Culture type: @Model.CultureType</p>
+            <p class="text-white-50 mb-0">Team Leader: @(string.IsNullOrWhiteSpace(Model.LeaderName) ? "Not assigned" : Model.LeaderName)</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Take assessment</a>
-            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
-        </div>
-        <div class="row g-3">
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Alignment</div><div class="h3 mb-0">@Model.AlignmentScore.ToString("0.0")%</div></div></div>
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Polarization</div><div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")</div></div></div>
-            <div class="col-auto"><div class="vi-card-glass vi-card-glass--light p-3 text-center"><div class="small text-white-50">Maturity</div><div class="h3 mb-0">@Model.MaturityIndex.ToString("0.0")</div></div></div>
+            @* <a class="btn btn-outline-light" asp-controller="Reports" asp-action="Personal">Personal report</a> *@
+            <a class="btn vi-nav-cta" asp-controller="Reports" asp-action="TeamCoaching" asp-route-teamId="@Model.TeamId">Team coaching</a>
+            @* <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a> *@
         </div>
     </div>
 
-    <div class="row g-4">
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="vi-card-glass vi-card-glass--light p-3 h-100 text-center">
+                <div class="small text-white-50">Alignment</div>
+                <div class="h3 mb-0">@Model.AlignmentScore.ToString("0.0")%</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vi-card-glass vi-card-glass--light p-3 h-100 text-center">
+                <div class="small text-white-50">Culture type</div>
+                <div class="h5 mb-0">@(string.IsNullOrWhiteSpace(Model.CultureType) ? "Not defined" : Model.CultureType)</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vi-card-glass vi-card-glass--light p-3 h-100 text-center">
+                <div class="small text-white-50">Polarization</div>
+                <div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")%</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="vi-card-glass vi-card-glass--light p-3 h-100 text-center">
+                <div class="small text-white-50">Maturity index</div>
+                <div class="h3 mb-0">@Model.MaturityIndex.ToString("0.0")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Category profile</h2>
-                @foreach (var item in Model.CategoryProfile)
+                <h2 class="h5 mb-3">Team top values</h2>
+                @if (Model.TopValues.Any())
                 {
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between small mb-1">
-                            <span>@item.Category</span>
-                            <span>@item.Percentage.ToString("0.0")%</span>
+                    @foreach (var item in Model.TopValues.Take(5))
+                    {
+                        <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                            <div>
+                                <div class="fw-semibold">@item.Name</div>
+                                <div class="small text-white-50">@item.Category</div>
+                            </div>
+                            <div class="text-white-50">Count: @item.Rank</div>
                         </div>
-                        <div class="progress" style="height:10px; background: rgba(255,255,255,.08);">
-                            <div class="progress-bar" role="progressbar" style="width:@item.Percentage%"></div>
-                        </div>
-                    </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">Top team values are not available yet.</p>
                 }
             </div>
         </div>
@@ -45,58 +73,159 @@
                 <h2 class="h5 mb-3">Shared core values</h2>
                 @if (Model.SharedCoreValues.Any())
                 {
-                    <ul class="text-white-50 mb-4">
-                        @foreach (var item in Model.SharedCoreValues)
+                    <ul class="mb-4 text-white-50">
+                        @foreach (var value in Model.SharedCoreValues)
                         {
-                            <li>@item</li>
+                            <li class="mb-2">@value</li>
                         }
                     </ul>
                 }
                 else
                 {
-                    <p class="text-white-50">No shared values are present across all team members yet.</p>
+                    <p class="text-white-50">Shared value patterns are not available yet.</p>
                 }
 
-                <h2 class="h5 mb-3">Tension fields</h2>
-                <ul class="text-white-50 mb-0">
-                    @foreach (var item in Model.TensionFields)
-                    {
-                        <li>@item</li>
-                    }
-                </ul>
-            </div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Top values</h2>
-                @foreach (var item in Model.TopValues)
+                <h3 class="h5 mb-3">Tension fields</h3>
+                @if (Model.TensionFields.Any())
                 {
-                    <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
-                        <div>
-                            <div class="fw-semibold">@item.Name</div>
-                            <div class="small text-white-50">@item.Category</div>
-                        </div>
-                        <div>@item.Rank</div>
-                    </div>
+                    <ul class="mb-0 text-white-50">
+                        @foreach (var item in Model.TensionFields)
+                        {
+                            <li class="mb-2">@item</li>
+                        }
+                    </ul>
                 }
-            </div>
-        </div>
-
-        <div class="col-lg-6">
-            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Least represented values</h2>
-                @foreach (var item in Model.LowestValues)
+                else
                 {
-                    <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
-                        <div>
-                            <div class="fw-semibold">@item.Name</div>
-                            <div class="small text-white-50">@item.Category</div>
-                        </div>
-                        <div>@item.Rank</div>
-                    </div>
+                    <p class="text-white-50 mb-0">No major tension fields identified.</p>
                 }
             </div>
         </div>
     </div>
+    <div class="row g-4 mb-4">
+        
+        <div class="col-lg-12">
+            <div class="vi-card-glass vi-card-glass--light p-4">
+                <h2 class="h5 mb-3">Value frequency by category</h2>
+
+                @if (Model.ValueFrequency != null && Model.ValueFrequency.Any())
+                {
+                    var groupedCategories = Model.ValueFrequency
+                    .GroupBy(v => v.Category)
+                    .OrderByDescending(g => g.Sum(x => x.Rank))
+                    .ToList();
+
+                    <div class="accordion" id="valueFrequencyAccordion">
+                        @for (int i = 0; i < groupedCategories.Count; i++)
+                        {
+                            var categoryGroup = groupedCategories[i];
+                            var collapseId = $"collapse-category-{i}";
+                            var headingId = $"heading-category-{i}";
+                            var totalCount = categoryGroup.Sum(x => x.Rank);
+
+                            <div class="accordion-item bg-transparent border-light border-opacity-10 mb-3">
+                                <h2 class="accordion-header" id="@headingId">
+                                    <button class="accordion-button collapsed bg-transparent text-white shadow-none"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#@collapseId"
+                                            aria-expanded="false"
+                                            aria-controls="@collapseId">
+                                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                            <span class="fw-semibold">@categoryGroup.Key</span>
+                                            <span class="text-white-50 small">Total count: @totalCount</span>
+                                        </div>
+                                    </button>
+                                </h2>
+
+                                <div id="@collapseId"
+                                     class="accordion-collapse collapse"
+                                     aria-labelledby="@headingId"
+                                     data-bs-parent="#valueFrequencyAccordion">
+                                    <div class="accordion-body pt-2">
+                                        @foreach (var item in categoryGroup.OrderByDescending(x => x.Rank).ThenBy(x => x.Name))
+                                        {
+                                            <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                                                <div>@item.Name</div>
+                                                <div class="text-white-50">@item.Rank</div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">Value frequency is not available yet.</p>
+                }
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4">
+                <h2 class="h5 mb-3">Team history</h2>
+                
+                @if (Model.History.Any())
+                {
+                    @foreach (var item in Model.History)
+                    {
+                        <div class="border-bottom border-light border-opacity-10 py-3">
+                            <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
+                                <div class="fw-semibold">@item.SnapshotDateUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                                <div class="text-white-50">Coverage: @item.TeamSize member(s)</div>
+                            </div>
+                            <div class="small text-white-50 mb-1">Culture type: @item.CultureType</div>
+                            <div class="small text-white-50 mb-1">Alignment: @item.AlignmentScore.ToString("0.0")% · Polarization: @item.PolarizationScore.ToString("0.0")% · Maturity: @item.MaturityIndex.ToString("0.0")</div>
+                            <div class="text-white-50">Top values: @string.Join(", ", item.TopValues)</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">No earlier team mapping is available yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-12">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h5 mb-0">Members</h2>
+                    <span class="text-white-50">@Model.Members.Count member(s)</span>
+                </div>
+                @if (Model.Members.Any())
+                {
+                    @foreach (var member in Model.Members)
+                    {
+                        <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                            <div>
+                                <div class="fw-semibold">@member.UserName @(member.IsLeader ? "(Leader)" : "")</div>
+                            </div>
+                            <div class="@(member.HasCompletedAssessment ? "text-success" : "text-warning")">
+                                @(member.HasCompletedAssessment ? "Completed" : "Pending")
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">No team members yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+    @* <div class="col-md-12">
+        <div class="vi-card-glass vi-card-glass--light p-3 h-100 text-center">
+            <div class="small text-white-50">Participation</div>
+            <div class="h3 mb-0">@Model.CompletedMembers / @Model.TotalMembers</div>
+            <div class="small text-white-50">@(Model.AllowPartialReport ? "Partial reporting enabled" : "Full completion required")</div>
+        </div>
+    </div> *@
 </section>

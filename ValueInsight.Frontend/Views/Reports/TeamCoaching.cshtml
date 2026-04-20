@@ -1,0 +1,111 @@
+﻿@model ValueInsight.Frontend.Models.TeamCoachingPageViewModel
+@{
+    ViewData["Title"] = "Team Coaching";
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <div class="vi-badge mb-3">AI team coaching</div>
+            <h1 class="mb-2">Team coaching for @Model.TeamReport.TeamName</h1>
+            <p class="text-white-50 mb-0">Culture interpretation, risks, leadership advice, and suggested interventions for the team.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-light" asp-action="Team" asp-route-teamId="@Model.TeamReport.TeamId">Back to team report</a>
+            @* <a class="btn btn-outline-light" asp-action="Personal">Personal report</a>
+            <a class="btn vi-nav-cta" asp-controller="Dashboard" asp-action="Index">Dashboard</a> *@
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Team coaching context</h2>
+                <p><strong>Culture type:</strong> @(string.IsNullOrWhiteSpace(Model.TeamReport.CultureType) ? "Not defined" : Model.TeamReport.CultureType)</p>
+                <p><strong>Alignment:</strong> @Model.TeamReport.AlignmentScore.ToString("0.0")%</p>
+                <p><strong>Polarization:</strong> @Model.TeamReport.PolarizationScore.ToString("0.0")%</p>
+                <p><strong>Maturity:</strong> @Model.TeamReport.MaturityIndex.ToString("0.0")</p>
+                <p><strong>Top values:</strong> @string.Join(", ", (Model.TeamReport.TopValues ?? new List<ValueInsight.Frontend.Models.RankedValueViewModel>()).OrderByDescending(x => x.Rank).Take(5).Select(x => x.Name))</p>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">AI team coaching</h2>
+
+                @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+                {
+                    <div class="alert alert-warning mb-4">@Model.ErrorMessage</div>
+                }
+
+                @if (Model.CoachingResult != null)
+                {
+                    @if ((Model.CoachingResult.Strengths?.Any() == true))
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Strengths of the culture</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.Strengths)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if ((Model.CoachingResult.Risks?.Any() == true))
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Cultural risks</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.Risks)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if ((Model.CoachingResult.LeadershipAdvice?.Any() == true))
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Leadership advice</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.LeadershipAdvice)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if ((Model.CoachingResult.SuggestedInterventions?.Any() == true))
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Suggested interventions</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.SuggestedInterventions)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrWhiteSpace(Model.CoachingResult.AICoachingAdvice))
+                    {
+                        <div>
+                            <h3 class="h6 text-info-emphasis">Detailed AI team advice</h3>
+                            <div class="text-white-50" style="white-space: pre-line;">@Model.CoachingResult.AICoachingAdvice</div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">Team coaching is not available right now.</p>
+                }
+            </div>
+        </div>
+        
+    </div>
+</section>

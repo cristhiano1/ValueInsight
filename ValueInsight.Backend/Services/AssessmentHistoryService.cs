@@ -20,6 +20,7 @@ public class AssessmentHistoryService
             UserId = userId,
             CreatedAtUtc = DateTime.UtcNow,
             UpdatedAtUtc = DateTime.UtcNow,
+            CompletedAtUtc = DateTime.UtcNow,
             Status = "Completed"
         };
 
@@ -84,6 +85,14 @@ public class AssessmentHistoryService
         }
 
         run.UpdatedAtUtc = DateTime.UtcNow;
+        if (run.Status == "Completed")
+            run.CompletedAtUtc ??= DateTime.UtcNow;
+
+        var membership = await _context.TeamMembers.FirstOrDefaultAsync(x => x.UserId == userId);
+        if (membership != null)
+            membership.HasCompletedAssessment = true;
+
         await _context.SaveChangesAsync();
     }
 }
+

@@ -1,75 +1,108 @@
 ﻿@model ValueInsight.Frontend.Models.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
+    var canManageWorkspace = Model.IsAdmin || Model.IsTeamLeader;
+    var canOpenTeamReport = Model.TeamId.HasValue && (Model.TeamReportReady || canManageWorkspace);
+    var roleLabel = Model.IsAdmin ? "Admin" : Model.IsTeamLeader ? "Team leader" : "Member";
 }
 
 <section class="container py-5 text-white">
     <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
         <div>
             <div class="vi-badge mb-3">Dashboard</div>
-            <h1 class="mb-2">Welcome back, @Model.UserName</h1>
-            <p class="text-white-50 mb-0">Review your assessment history, open your reports, or start a new assessment.</p>
+            <h1 class="mb-2">Welcome, @Model.UserName</h1>
+            <p class="text-white-50 mb-0">
+                An overview of your profile.
+            </p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a class="btn vi-nav-cta" asp-controller="Home" asp-action="Start">Start assessment</a>
-            <a class="btn btn-outline-light" asp-controller="Reports" asp-action="Personal">Open latest report</a>
+            <a class="btn vi-nav-cta" asp-controller="Reports" asp-action="Personal">Personal report</a>
+            @if (canOpenTeamReport)
+            {
+                <a class="btn vi-nav-cta" asp-controller="Reports" asp-action="Team" asp-route-teamId="@Model.TeamId">Team report</a>
+            }
+            else if (!Model.TeamId.HasValue)
+            {
+                <a class="btn vi-nav-cta" asp-controller="Teams" asp-action="Join">Join a team</a>
+            }
         </div>
     </div>
 
     <div class="row g-4 mb-4">
-        <div class="col-md-4"><div class="vi-card-glass vi-card-glass--light p-4 h-100"><div class="small text-white-50">Assessments completed</div><div class="display-6">@Model.AssessmentsCompleted</div></div></div>
-        <div class="col-md-4"><div class="vi-card-glass vi-card-glass--light p-4 h-100"><div class="small text-white-50">Latest assessment</div><div class="h4 mb-0">@(Model.LatestAssessmentCompletedAtUtc?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "Not completed yet")</div></div></div>
-        <div class="col-md-4"><div class="vi-card-glass vi-card-glass--light p-4 h-100"><div class="small text-white-50">Cultural fit</div><div class="display-6">@(Model.CulturalFitScore?.ToString("0.0") ?? "—")</div><div class="text-white-50">@(string.IsNullOrWhiteSpace(Model.TeamCultureType) ? "No team context yet" : Model.TeamCultureType)</div></div></div>
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50 mb-2">Your role</div>
+                <div class="h4 mb-1">@roleLabel</div>
+                <div class="small text-white-50 mb-2">Team</div>
+                <div class="h4 mb-1">@(Model.TeamName ?? "No team assigned")</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <div class="small text-white-50 mb-2">Personal report status</div>
+                <div class="h4 mb-1">@(Model.AssessmentHistory.Any() ? "Available" : "Not available yet")</div>
+                <div class="text-white-50">
+                    @(Model.AssessmentHistory.Any()
+                                        ? $"Latest assessment: {Model.AssessmentHistory.First().CompletedAtUtc.ToLocalTime():yyyy-MM-dd HH:mm}"
+                                        : "Complete your first assessment to unlock your report.")
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <div class="row g-4">
-        <div class="col-lg-8">
+        
+        <div class="col-md-4">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h5 mb-0">Assessment history</h2>
-                    <a class="btn btn-sm btn-outline-light" asp-controller="Home" asp-action="Start">Take assessment</a>
-                </div>
-                @if (Model.AssessmentHistory.Any())
+                <div class="small text-white-50 mb-2">Team Report status</div>
+                @if (Model.TeamId.HasValue)
                 {
-                    @foreach (var item in Model.AssessmentHistory)
-                    {
-                        <div class="border-bottom border-light border-opacity-10 py-3">
-                            <div class="d-flex flex-wrap justify-content-between gap-2 mb-2">
-                                <div class="fw-semibold">@item.CompletedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
-                                <div class="text-white-50">Primary category: @item.PrimaryCategory</div>
-                            </div>
-                            <div class="text-white-50">Top values: @string.Join(", ", item.TopValues)</div>
-                        </div>
-                    }
+                    <div class="h4 mb-1">@(Model.TeamReportReady ? "Available" : "Team report is in progress")</div>
+                    <div class="text-white-50">
+                        @if (Model.IsAdmin || Model.IsTeamLeader)
+                        {
+                            <span>Completion: @Model.TeamMembersCompleted / @Model.TeamMembersTotal</span>
+                        }
+                        else
+                        {
+                            <span>@(Model.CulturalFitScore.HasValue ? $"Cultural fit: {Model.CulturalFitScore.Value:0.0}" : "Team alignment not available.")</span>
+                        }
+                    </div>
                 }
                 else
                 {
-                    <p class="text-white-50 mb-0">No completed assessments yet. Start your first assessment to generate a report history.</p>
+                    <div class="h4 mb-1">No team connected</div>
+                    
                 }
             </div>
         </div>
+
         <div class="col-lg-4">
+
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
-                <h2 class="h5 mb-3">Quick access</h2>
-                <p><strong>Team:</strong> @(Model.TeamName ?? "No team selected")</p>
-                <p><strong>Team culture:</strong> @(string.IsNullOrWhiteSpace(Model.TeamCultureType) ? "Not available yet" : Model.TeamCultureType)</p>
-                <div class="d-grid gap-2 mt-4">
-                    <a class="btn btn-outline-light" asp-controller="Reports" asp-action="Personal">Personal report</a>
-
-                    @if (Model.TeamId.HasValue)
-                    {
-                        <a class="btn btn-outline-light"
-                           asp-controller="Reports"
-                           asp-action="Team"
-                           asp-route-teamId="@Model.TeamId">
-                            Team report
-                        </a>
-                    }
-
-                </div>
-
-
-
+                @if (canManageWorkspace)
+                {
+                    <h2 class="h5 mb-3">Management access</h2>
+                    <p class="text-white-50">Workspace for team management.</p>
+                    
+                    <div class="d-grid gap-2">
+                        
+                        <a class="btn vi-nav-cta" asp-controller="Teams" asp-action="Workspace">Team management</a>
+                    </div>
+                   
+                }
+                else
+                {
+                    <h2 class="h5 mb-3">Quick access</h2>
+                    <p class="text-white-50 mb-3">View your team status and Coaching prompts.</p>
+                    <div class="d-grid gap-2">
+                       
+                        <a class="btn vi-nav-cta" asp-controller="Teams" asp-action="Workspace">View team status</a>
+                        <a class="btn vi-nav-cta" asp-controller="Reports" asp-action="CoachingPrompts">Coaching prompts</a>
+                    </div>
+                }
             </div>
         </div>
     </div>

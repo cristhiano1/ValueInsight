@@ -4,10 +4,11 @@
     ViewData["Title"] = "Register";
 }
 
-<div class="container mt-5" style="max-width: 500px;">
-    <h2 class="mb-4">Register</h2>
+<div class="container mt-5" style="max-width: 560px;">
+    <h2 class="mb-3 text-white">Register</h2>
+    <p class="text-white-50">Create your account.</p>
 
-    <form asp-action="Register" method="post">
+    <form asp-action="Register" method="post" class="vi-card-glass vi-card-glass--light p-4">
         <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
         <div class="mb-3">
@@ -22,25 +23,13 @@
             <span asp-validation-for="Email" class="text-danger"></span>
         </div>
 
-        <div class="mb-3">
+        <div class="mb-4">
             <label asp-for="Password" class="text-white"></label>
             <input asp-for="Password" class="form-control" />
             <span asp-validation-for="Password" class="text-danger"></span>
         </div>
 
-        <div class="mb-3">
-            <label asp-for="TeamId" class="text-white"></label>
-            <select asp-for="TeamId" class="form-select">
-                <option value="">-- optional --</option>
-                @foreach (var team in Model.Teams)
-                {
-                    <option value="@team.Id">@team.Name</option>
-                }
-            </select>
-            <span asp-validation-for="TeamId" class="text-danger"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100">Register</button>
+        <button type="submit" class="btn vi-nav-cta w-100">Create account</button>
     </form>
 </div>
 
