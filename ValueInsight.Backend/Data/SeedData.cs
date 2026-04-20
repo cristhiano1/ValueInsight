@@ -1,5 +1,4 @@
 ﻿using ValueInsight.Backend.Models;
-using ValueInsight.Backend.Services;
 
 namespace ValueInsight.Backend.Data;
 
@@ -79,44 +78,4 @@ public static class SeedData
         new Value { Id = 59, Name = "Values-Based Action", Category = ValueCategory.MeaningAndPurpose, ShortDefinition = "I act in line with my values.", BehaviorIndicator = "Makes choices anchored in principles." },
         new Value { Id = 60, Name = "Balance", Category = ValueCategory.MeaningAndPurpose, ShortDefinition = "Work and life should be sustainable.", BehaviorIndicator = "Protects healthy boundaries." }
     };
-
-
-    
-    
-        public static void SeedUsers(ValueInsightDbContext context, PasswordService passwordService)
-        {
-            // ---------- COACH ----------
-            if (!context.Users.Any(u => u.Email == "coach@test.com"))
-            {
-                var coach = new User
-                {
-                    Name = "Coach Admin",
-                    Email = "coach@test.com",
-                    Role = "Coach"
-                };
-
-                coach.PasswordHash = passwordService.HashPassword(coach, "1234");
-
-                context.Users.Add(coach);
-                context.SaveChanges();
-            }
-
-            // ---------- USER ----------
-            if (!context.Users.Any(u => u.Email == "user@test.com"))
-            {
-                var user = new User
-                {
-                    Name = "Normal User",
-                    Email = "user@test.com",
-                    Role = "User"
-                };
-
-                user.PasswordHash = passwordService.HashPassword(user, "1234");
-
-                context.Users.Add(user);
-                context.SaveChanges();
-            }
-        }
-    }
-
-
+}

@@ -67,9 +67,6 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TeamId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -77,8 +74,6 @@ namespace ValueInsight.Backend.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("TeamId");
 
                     b.HasIndex("UserId");
 
@@ -97,9 +92,6 @@ namespace ValueInsight.Backend.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("Rank")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.Property<int>("ValueId")
@@ -229,11 +221,7 @@ namespace ValueInsight.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Role")
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -789,19 +777,11 @@ namespace ValueInsight.Backend.Migrations
 
             modelBuilder.Entity("ValueInsight.Backend.Models.AssessmentRun", b =>
                 {
-                    b.HasOne("ValueInsight.Backend.Models.Team", "Team")
-                        .WithMany()
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("ValueInsight.Backend.Models.User", "User")
                         .WithMany("AssessmentRuns")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Team");
 
                     b.Navigation("User");
                 });

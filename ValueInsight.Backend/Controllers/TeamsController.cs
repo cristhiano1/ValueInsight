@@ -8,7 +8,7 @@ namespace ValueInsight.Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // ✔ requiere login por defecto
+    [Authorize]
     public class TeamsController : ControllerBase
     {
         private readonly ValueInsightDbContext _context;
@@ -18,7 +18,14 @@ namespace ValueInsight.Backend.Controllers
             _context = context;
         }
 
-        // 👤 Público (solo lectura básica)
+        //[HttpGet]
+        //public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
+        //{
+        //    return await _context.Teams
+        //        .Include(t => t.Users)
+        //        .ToListAsync();
+        //}
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetTeams()
@@ -35,8 +42,6 @@ namespace ValueInsight.Backend.Controllers
             return Ok(teams);
         }
 
-        // 🔥 SOLO COACH
-        [Authorize(Roles = "Coach")]
         [HttpGet("{id}")]
         public async Task<ActionResult<Team>> GetTeam(int id)
         {
@@ -50,8 +55,6 @@ namespace ValueInsight.Backend.Controllers
             return team;
         }
 
-        // 🔥 SOLO COACH
-        [Authorize(Roles = "Coach")]
         [HttpPost]
         public async Task<ActionResult<Team>> CreateTeam(Team team)
         {
@@ -61,8 +64,6 @@ namespace ValueInsight.Backend.Controllers
             return CreatedAtAction(nameof(GetTeam), new { id = team.Id }, team);
         }
 
-        // 🔥 SOLO COACH
-        [Authorize(Roles = "Coach")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTeam(int id, Team team)
         {
@@ -75,8 +76,6 @@ namespace ValueInsight.Backend.Controllers
             return NoContent();
         }
 
-        // 🔥 SOLO COACH
-        [Authorize(Roles = "Coach")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTeam(int id)
         {

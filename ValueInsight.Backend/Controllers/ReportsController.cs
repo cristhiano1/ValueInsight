@@ -28,7 +28,6 @@ public class ReportsController : ControllerBase
         _culturalFitService = culturalFitService;
     }
 
-    // 👤 USER + COACH
     [HttpGet("me")]
     public async Task<IActionResult> GetMyReport()
     {
@@ -38,14 +37,17 @@ public class ReportsController : ControllerBase
 
         var user = await _context.Users
             .Include(u => u.Team)
-            .Include(u => u.UserValues).ThenInclude(uv => uv.Value)
+            .Include(u => u.UserValues)
+                .ThenInclude(uv => uv.Value)
+            .Include(u => u.Team)
+                .ThenInclude(t => t!.Users)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
-        if (user == null) return NotFound();
+        if (user == null)
+            return NotFound();
 
         var userValues = user.UserValues.OrderBy(uv => uv.Rank).ToList();
         var categoryProfile = CultureAnalysisHelper.BuildNormalizedCategoryProfile(userValues);
-
         var report = new PersonalReportDto
         {
             UserId = user.Id,
@@ -66,11 +68,38 @@ public class ReportsController : ControllerBase
             }).OrderByDescending(x => x.Percentage).ToList(),
         };
 
+        if (userValues.Any())
+        {
+            foreach (var value in userValues.Take(3))
+            {
+                var prefix = $"topvalue-{value.ValueId}";
+                var answers = await _context.ReflectionAnswers
+                    .Where(x => x.UserId == userId && x.QuestionId.StartsWith(prefix))
+                    .ToListAsync();
+
+                report.ReflectionInsights.Add(new ReflectionInsightDto
+                {
+                    ValueName = value.Value.Name,
+                    Meaning = answers.FirstOrDefault(x => x.QuestionId.EndsWith("-meaning"))?.ResponseText ?? string.Empty,
+                    Behavior = answers.FirstOrDefault(x => x.QuestionId.EndsWith("-behavior"))?.ResponseText ?? string.Empty,
+                    Friction = answers.FirstOrDefault(x => x.QuestionId.EndsWith("-friction"))?.ResponseText ?? string.Empty,
+                });
+            }
+
+            report.CoachingQuestions = userValues.Take(3)
+                .Select(v => $"How can you express {v.Value.Name.ToLower()} more clearly in your leadership this week?")
+                .Concat(new[]
+                {
+                    "Where do your current goals support your top values — and where do they conflict?",
+                    "What conversation would reduce the biggest value tension you are experiencing right now?"
+                })
+                .ToList();
+        }
+
         if (user.TeamId.HasValue)
         {
             var teamReport = await _teamCultureService.BuildTeamReport(user.TeamId.Value);
             var fit = await _culturalFitService.CalculateForUser(userId);
-
             if (teamReport != null)
             {
                 report.TeamCultureType = teamReport.CultureType;
@@ -87,7 +116,7 @@ public class ReportsController : ControllerBase
         return Ok(report);
     }
 
-    // 👤 USER + COACH
+
     [HttpGet("dashboard")]
     public async Task<IActionResult> GetDashboard()
     {
@@ -99,11 +128,13 @@ public class ReportsController : ControllerBase
             .Include(u => u.Team)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
-        if (user == null) return NotFound();
+        if (user == null)
+            return NotFound();
 
         var runs = await _context.AssessmentRuns
             .Where(x => x.UserId == userId)
-            .Include(x => x.ValueSelections).ThenInclude(x => x.Value)
+            .Include(x => x.ValueSelections)
+                .ThenInclude(x => x.Value)
             .OrderByDescending(x => x.CreatedAtUtc)
             .ToListAsync();
 
@@ -111,23 +142,31 @@ public class ReportsController : ControllerBase
         {
             AssessmentRunId = run.Id,
             CompletedAtUtc = run.CreatedAtUtc,
-            TopValues = run.ValueSelections.OrderBy(x => x.Rank).Take(3).Select(x => x.Value.Name).ToList(),
-            PrimaryCategory = run.ValueSelections.OrderBy(x => x.Rank)
+            TopValues = run.ValueSelections
+                .OrderBy(x => x.Rank)
+                .Take(3)
+                .Select(x => x.Value.Name)
+                .ToList(),
+            PrimaryCategory = run.ValueSelections
+                .OrderBy(x => x.Rank)
                 .Select(x => CultureAnalysisHelper.ToDisplayName(x.Value.Category))
-                .FirstOrDefault() ?? ""
+                .FirstOrDefault() ?? string.Empty
         }).ToList();
 
         double? fitScore = null;
-        string teamCulture = "";
+        string teamCulture = string.Empty;
 
         if (user.TeamId.HasValue)
         {
             var fit = await _culturalFitService.CalculateForUser(userId);
-            if (fit.HasValue) fitScore = fit.Value.score;
+            if (fit.HasValue)
+                fitScore = fit.Value.score;
 
             var teamReport = await _teamCultureService.BuildTeamReport(user.TeamId.Value);
-            if (teamReport != null) teamCulture = teamReport.CultureType;
+            if (teamReport != null)
+                teamCulture = teamReport.CultureType;
         }
+
 
         var dto = new DashboardDto
         {
@@ -144,43 +183,12 @@ public class ReportsController : ControllerBase
         return Ok(dto);
     }
 
-    // 🔥 SOLO COACH
-    [Authorize(Roles = "Coach")]
     [HttpGet("team/{teamId:int}")]
     public async Task<IActionResult> GetTeamReport(int teamId)
     {
         var report = await _teamCultureService.BuildTeamReport(teamId);
-        if (report == null) return NotFound();
-
-        return Ok(report);
-    }
-
-    // 🔥 REGLA FINAL (IMPORTANTE)
-    [HttpPost("team/{teamId:int}/generate")]
-    public async Task<IActionResult> GenerateTeamReport(int teamId)
-    {
-        var isCoach = User.IsInRole("Coach");
-
-        var totalUsers = await _context.Users
-            .Where(u => u.TeamId == teamId)
-            .CountAsync();
-
-        var respondedUsers = await _context.AssessmentRuns
-            .Where(x => x.TeamId == teamId)
-            .Select(x => x.UserId)
-            .Distinct()
-            .CountAsync();
-
-        if (respondedUsers < totalUsers && !isCoach)
-        {
-            return BadRequest(new
-            {
-                message = $"Only {respondedUsers}/{totalUsers} users completed. Coach required."
-            });
-        }
-
-        var report = await _teamCultureService.BuildTeamReport(teamId);
-        if (report == null) return NotFound();
+        if (report == null)
+            return NotFound();
 
         return Ok(report);
     }

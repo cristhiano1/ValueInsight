@@ -7,7 +7,7 @@ namespace ValueInsight.Backend.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize] // ✔ sigue requiriendo login
+[Authorize]
 public class AiCoachController : ControllerBase
 {
     private readonly AiCoachService _aiCoachService;
@@ -22,7 +22,6 @@ public class AiCoachController : ControllerBase
     }
 
     // POST: api/AiCoach/generate
-    [Authorize(Roles = "Coach")] // 🔥 SOLO COACH
     [HttpPost("generate")]
     public async Task<ActionResult<CoachingResponseDtos>> GenerateCoaching([FromBody] CoachingRequestDtos request)
     {
