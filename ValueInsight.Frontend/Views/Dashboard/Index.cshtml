@@ -29,8 +29,8 @@
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-md-4">
+    <div class="row g-5 mb-5">
+        <div class="col-md-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <div class="small text-white-50 mb-2">Your role</div>
                 <div class="h4 mb-1">@roleLabel</div>
@@ -38,7 +38,7 @@
                 <div class="h4 mb-1">@(Model.TeamName ?? "No team assigned")</div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <div class="small text-white-50 mb-2">Personal report status</div>
                 <div class="h4 mb-1">@(Model.AssessmentHistory.Any() ? "Available" : "Not available yet")</div>
@@ -52,9 +52,9 @@
 
     </div>
 
-    <div class="row g-4">
+    <div class="row g-5 mb-5">
         
-        <div class="col-md-4">
+        <div class="col-md-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <div class="small text-white-50 mb-2">Team Report status</div>
                 @if (Model.TeamId.HasValue)
@@ -79,7 +79,7 @@
             </div>
         </div>
 
-        <div class="col-lg-4">
+        <div class="col-lg-6">
 
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 @if (canManageWorkspace)
