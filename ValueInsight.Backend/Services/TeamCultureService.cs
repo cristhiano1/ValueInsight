@@ -32,17 +32,79 @@ public class TeamCultureService
     public async Task<TeamReportDto?> BuildTeamReport(int teamId)
     {
         var team = await _context.Teams
-            .Include(t => t.Users)
-                .ThenInclude(u => u.UserValues)
-                    .ThenInclude(uv => uv.Value)
+            .Include(t => t.Leader)
+            .Include(t => t.Members)
+                .ThenInclude(tm => tm.User)
+                    .ThenInclude(u => u.UserValues)
+                        .ThenInclude(uv => uv.Value)
+            .Include(t => t.Members)
+                .ThenInclude(tm => tm.User)
+                    .ThenInclude(u => u.AssessmentRuns)
+                        .ThenInclude(r => r.ValueSelections)
+                            .ThenInclude(vs => vs.Value)
             .FirstOrDefaultAsync(t => t.Id == teamId);
 
         if (team == null)
             return null;
 
-        var usersWithValues = team.Users.Where(u => u.UserValues.Any()).ToList();
+        foreach (var member in team.Members)
+        {
+            member.HasCompletedAssessment = member.User.AssessmentRuns.Any(r => r.Status == "Completed");
+        }
+
+        var memberProgress = team.Members
+            .OrderBy(m => m.User.Name)
+            .Select(m => new TeamMemberProgressDto
+            {
+                UserId = m.UserId,
+                UserName = m.User.Name,
+                HasCompletedAssessment = m.HasCompletedAssessment,
+                IsLeader = team.LeaderId == m.UserId
+            })
+            .ToList();
+
+        var completedMembers = memberProgress.Count(x => x.HasCompletedAssessment);
+        var totalMembers = memberProgress.Count;
+        var reportReady = totalMembers > 0 && (completedMembers == totalMembers || team.AllowPartialReport);
+
+        var usersWithValues = team.Members.Where(m => m.User.UserValues.Any()).Select(m => m.User).ToList();
         var allUserValues = usersWithValues.SelectMany(u => u.UserValues).ToList();
 
+        var teamMetrics = BuildMetricsFromUserValues(usersWithValues, allUserValues);
+
+        var history = BuildTeamHistory(team.Members.Select(m => m.User).ToList());
+        var historySummary = BuildHistorySummary(history, teamMetrics.TopValues, teamMetrics.AlignmentScore, teamMetrics.PolarizationScore, teamMetrics.MaturityIndex);
+
+        var tensionFields = BuildTensionFields(teamMetrics.TeamProfile);
+
+        return new TeamReportDto
+        {
+            TeamId = team.Id,
+            TeamName = team.Name,
+            TeamSize = usersWithValues.Count,
+            CultureType = teamMetrics.CultureType,
+            AlignmentScore = teamMetrics.AlignmentScore,
+            PolarizationScore = teamMetrics.PolarizationScore,
+            MaturityIndex = teamMetrics.MaturityIndex,
+            IsReady = reportReady,
+            AllowPartialReport = team.AllowPartialReport,
+            CompletedMembers = completedMembers,
+            TotalMembers = totalMembers,
+            LeaderName = team.Leader?.Name ?? string.Empty,
+            CategoryProfile = teamMetrics.CategoryProfile,
+            TopValues = teamMetrics.TopValues,
+            LowestValues = teamMetrics.LowestValues,
+            ValueFrequency = teamMetrics.ValueFrequency,
+            SharedCoreValues = teamMetrics.SharedCoreValues,
+            TensionFields = tensionFields,
+            History = history,
+            HistorySummary = historySummary,
+            Members = memberProgress
+        };
+    }
+
+    private static TeamMetrics BuildMetricsFromUserValues(List<User> usersWithValues, List<UserValue> allUserValues)
+    {
         var emptyProfile = Enum.GetValues<ValueCategory>()
             .ToDictionary(c => c, _ => 0.0);
 
@@ -75,21 +137,9 @@ public class TeamCultureService
             .Select(v => v.Name)
             .ToList();
 
-        var tensionFields = new List<string>();
-        if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.22)
-            tensionFields.Add("Autonomy vs structure");
-        if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.22)
-            tensionFields.Add("Results vs relationships");
-        if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.20 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20)
-            tensionFields.Add("Innovation vs stability");
-        if (!tensionFields.Any())
-            tensionFields.Add("No major tension field detected yet");
-
-        return new TeamReportDto
+        return new TeamMetrics
         {
-            TeamId = team.Id,
-            TeamName = team.Name,
-            TeamSize = usersWithValues.Count,
+            TeamProfile = teamProfile,
             CultureType = CultureAnalysisHelper.ClassifyCultureType(teamProfile),
             AlignmentScore = Math.Round(alignment * 100, 1),
             PolarizationScore = Math.Round(polarization * 100, 1),
@@ -101,8 +151,140 @@ public class TeamCultureService
             }).OrderByDescending(x => x.Percentage).ToList(),
             TopValues = valueFrequency.Take(5).ToList(),
             LowestValues = valueFrequency.OrderBy(v => v.Rank).ThenBy(v => v.Name).Take(5).ToList(),
-            SharedCoreValues = sharedValues,
-            TensionFields = tensionFields
+            ValueFrequency = valueFrequency,
+            SharedCoreValues = sharedValues
         };
+    }
+
+    private static List<string> BuildTensionFields(Dictionary<ValueCategory, double> teamProfile)
+    {
+        var tensionFields = new List<string>();
+
+        if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.22)
+            tensionFields.Add("Autonomy vs structure");
+        if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.22)
+            tensionFields.Add("Results vs relationships");
+        if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.20 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20)
+            tensionFields.Add("Innovation vs stability");
+        if (!tensionFields.Any())
+            tensionFields.Add("No major tension field detected yet");
+
+        return tensionFields;
+    }
+
+    private static List<TeamHistoryItemDto> BuildTeamHistory(List<User> teamUsers)
+    {
+        var completedRuns = teamUsers
+            .SelectMany(u => u.AssessmentRuns)
+            .Where(r => r.Status == "Completed" && r.ValueSelections.Any())
+            .OrderBy(r => r.CompletedAtUtc ?? r.UpdatedAtUtc)
+            .ToList();
+
+        if (!completedRuns.Any())
+            return new List<TeamHistoryItemDto>();
+
+        var snapshotDates = completedRuns
+            .Select(r => r.CompletedAtUtc ?? r.UpdatedAtUtc)
+            .Distinct()
+            .OrderByDescending(d => d)
+            .Take(8)
+            .OrderBy(d => d)
+            .ToList();
+
+        var history = new List<TeamHistoryItemDto>();
+
+        foreach (var snapshotDate in snapshotDates)
+        {
+            var latestRunsAtDate = teamUsers
+                .Select(user => user.AssessmentRuns
+                    .Where(r => r.Status == "Completed" && r.ValueSelections.Any() && (r.CompletedAtUtc ?? r.UpdatedAtUtc) <= snapshotDate)
+                    .OrderByDescending(r => r.CompletedAtUtc ?? r.UpdatedAtUtc)
+                    .FirstOrDefault())
+                .Where(r => r != null)
+                .Cast<AssessmentRun>()
+                .ToList();
+
+            if (!latestRunsAtDate.Any())
+                continue;
+
+            var usersAtDate = latestRunsAtDate
+                .Select(run => new User
+                {
+                    Id = run.UserId,
+                    UserValues = run.ValueSelections
+                        .OrderBy(v => v.Rank)
+                        .Select(v => new UserValue
+                        {
+                            UserId = run.UserId,
+                            ValueId = v.ValueId,
+                            Rank = v.Rank,
+                            Value = v.Value
+                        })
+                        .ToList()
+                })
+                .Where(u => u.UserValues.Any())
+                .ToList();
+
+            var allValuesAtDate = usersAtDate.SelectMany(u => u.UserValues).ToList();
+            if (!allValuesAtDate.Any())
+                continue;
+
+            var metrics = BuildMetricsFromUserValues(usersAtDate, allValuesAtDate);
+
+            history.Add(new TeamHistoryItemDto
+            {
+                SnapshotDateUtc = snapshotDate,
+                TopValues = metrics.TopValues.Select(x => x.Name).ToList(),
+                AlignmentScore = metrics.AlignmentScore,
+                PolarizationScore = metrics.PolarizationScore,
+                MaturityIndex = metrics.MaturityIndex,
+                CultureType = metrics.CultureType,
+                TeamSize = usersAtDate.Count
+            });
+        }
+
+        return history.OrderByDescending(x => x.SnapshotDateUtc).ToList();
+    }
+
+    private static TeamHistorySummaryDto BuildHistorySummary(
+        List<TeamHistoryItemDto> history,
+        List<RankedValueDto> currentTopValues,
+        double currentAlignment,
+        double currentPolarization,
+        double currentMaturity)
+    {
+        var previous = history.Skip(1).FirstOrDefault() ?? history.FirstOrDefault();
+        if (previous == null)
+        {
+            return new TeamHistorySummaryDto
+            {
+                HasHistory = false,
+                CurrentTopValues = currentTopValues.Select(x => x.Name).ToList()
+            };
+        }
+
+        return new TeamHistorySummaryDto
+        {
+            HasHistory = history.Count > 1,
+            CurrentTopValues = currentTopValues.Select(x => x.Name).ToList(),
+            PreviousTopValues = previous.TopValues,
+            AlignmentChange = Math.Round(currentAlignment - previous.AlignmentScore, 1),
+            PolarizationChange = Math.Round(currentPolarization - previous.PolarizationScore, 1),
+            MaturityChange = Math.Round(currentMaturity - previous.MaturityIndex, 1)
+        };
+    }
+
+    private sealed class TeamMetrics
+    {
+        public Dictionary<ValueCategory, double> TeamProfile { get; set; } = new();
+        public string CultureType { get; set; } = string.Empty;
+        public double AlignmentScore { get; set; }
+        public double PolarizationScore { get; set; }
+        public double MaturityIndex { get; set; }
+        public List<CategoryScoreDto> CategoryProfile { get; set; } = new();
+        public List<RankedValueDto> TopValues { get; set; } = new();
+        public List<RankedValueDto> LowestValues { get; set; } = new();
+        public List<RankedValueDto> ValueFrequency { get; set; } = new();
+        public List<string> SharedCoreValues { get; set; } = new();
     }
 }

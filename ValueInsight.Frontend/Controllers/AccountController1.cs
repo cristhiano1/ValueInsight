@@ -16,39 +16,15 @@ namespace ValueInsight.Frontend.Controllers
             _configuration = configuration;
         }
 
-        private async Task<List<TeamOptionViewModel>> LoadTeamsAsync()
-        {
-            var client = _httpClientFactory.CreateClient();
-            var baseUrl = _configuration["ApiSettings:BaseUrl"];
-
-            var response = await client.GetAsync($"{baseUrl}/api/teams");
-
-            if (!response.IsSuccessStatusCode)
-                return new List<TeamOptionViewModel>();
-
-            var json = await response.Content.ReadAsStringAsync();
-
-            return JsonSerializer.Deserialize<List<TeamOptionViewModel>>(json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                ?? new List<TeamOptionViewModel>();
-        }
-
         [HttpGet]
-        public async Task<IActionResult> Register()
+        public IActionResult Register()
         {
-            var model = new RegisterViewModel
-            {
-                Teams = await LoadTeamsAsync()
-            };
-
-            return View(model);
+            return View(new RegisterViewModel());
         }
 
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            model.Teams = await LoadTeamsAsync();
-
             if (!ModelState.IsValid)
                 return View(model);
 
@@ -59,8 +35,7 @@ namespace ValueInsight.Frontend.Controllers
             {
                 name = model.Name,
                 email = model.Email,
-                password = model.Password,
-                teamId = model.TeamId
+                password = model.Password
             };
 
             var content = new StringContent(

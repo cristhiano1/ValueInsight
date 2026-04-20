@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection.Emit;
 using ValueInsight.Backend.Models;
 
 namespace ValueInsight.Backend.Data
@@ -11,7 +10,6 @@ namespace ValueInsight.Backend.Data
         {
         }
 
-        // 🔥 DbSets (FALTAN AHORA MISMO)
         public DbSet<User> Users => Set<User>();
         public DbSet<Value> Values => Set<Value>();
         public DbSet<UserValue> UserValues => Set<UserValue>();
@@ -21,14 +19,25 @@ namespace ValueInsight.Backend.Data
         public DbSet<AssessmentRun> AssessmentRuns => Set<AssessmentRun>();
         public DbSet<AssessmentValueSelection> AssessmentValueSelections => Set<AssessmentValueSelection>();
         public DbSet<AssessmentReflectionAnswer> AssessmentReflectionAnswers => Set<AssessmentReflectionAnswer>();
+        public DbSet<TeamJoinRequest> TeamJoinRequests => Set<TeamJoinRequest>();
+        public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfigurationsFromAssembly(typeof(ValueInsightDbContext).Assembly);
 
-            // Seed initial values
             modelBuilder.Entity<Value>().HasData(SeedData.Values);
             modelBuilder.Entity<Team>().HasData(TeamSeedData.Teams);
+
+            modelBuilder.Entity<Team>()
+                .HasOne(x => x.Leader)
+                .WithMany(x => x.LedTeams)
+                .HasForeignKey(x => x.LeaderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<Team>()
+                .HasIndex(x => x.InviteCode)
+                .IsUnique(true);
 
             modelBuilder.Entity<AssessmentRun>()
                 .HasOne(x => x.User)
@@ -53,6 +62,34 @@ namespace ValueInsight.Backend.Data
                 .WithMany(x => x.ReflectionAnswers)
                 .HasForeignKey(x => x.AssessmentRunId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TeamJoinRequest>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.JoinRequests)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TeamJoinRequest>()
+                .HasOne(x => x.Team)
+                .WithMany(x => x.JoinRequests)
+                .HasForeignKey(x => x.TeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TeamMember>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.TeamMemberships)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TeamMember>()
+                .HasOne(x => x.Team)
+                .WithMany(x => x.Members)
+                .HasForeignKey(x => x.TeamId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TeamMember>()
+                .HasIndex(x => new { x.TeamId, x.UserId })
+                .IsUnique();
 
             base.OnModelCreating(modelBuilder);
         }

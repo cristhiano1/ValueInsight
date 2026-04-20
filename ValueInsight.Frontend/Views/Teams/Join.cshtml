@@ -1,0 +1,69 @@
+﻿@model ValueInsight.Frontend.Models.TeamJoinPageViewModel
+@{
+    ViewData["Title"] = "Join a Team";
+}
+
+<section class="container py-5 text-white" style="max-width: 900px;">
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
+        <div>
+            <div class="vi-badge mb-3">Join a team</div>
+            <h1 class="mb-2">Request access to a team</h1>
+            <p class="text-white-50 mb-0">You can complete your assessment without a team. Join later with an invite code when you are ready.</p>
+        </div>
+        @* <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Back to dashboard</a> *@
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="alert alert-info">@Model.Message</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Join with invite code</h2>
+                <form asp-action="Join" method="post">
+                    <div class="mb-3">
+                        <label asp-for="InviteCode" class="form-label text-white">Invite code</label>
+                        <input asp-for="InviteCode" class="form-control" placeholder="TEAM-0001" />
+                    </div>
+                    <button type="submit" class="btn vi-nav-cta w-100">Send join request</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Available teams</h2>
+                @if (Model.Teams.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-dark table-borderless align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Team</th>
+                                    <th>Leader</th>
+                                    <th>Invite code</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var team in Model.Teams)
+                                {
+                                    <tr>
+                                        <td>@team.Name</td>
+                                        <td>@(team.LeaderName ?? "Not assigned")</td>
+                                        <td>@(team.InviteCode ?? "Pending")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">No teams are available yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+</section>

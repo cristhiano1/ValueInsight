@@ -37,6 +37,7 @@ builder.Services.AddScoped<TeamCultureService>();
 builder.Services.AddScoped<AssessmentHistoryService>();
 builder.Services.AddScoped<JwtService>();
 builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<TeamAccessService>();
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -112,6 +113,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<ValueInsightDbContext>();
     db.Database.Migrate();
 }
+await AdminSeeder.SeedAdminAsync(app.Services, app.Configuration);
 
 
 // Swagger

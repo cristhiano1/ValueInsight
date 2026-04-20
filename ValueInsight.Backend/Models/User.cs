@@ -6,15 +6,15 @@
 
         public string Name { get; set; } = string.Empty;
 
-        // AÑADIDOS para autenticación
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
 
-        public int? TeamId { get; set; }
-
-        public Team? Team { get; set; } = null!;
+        public bool IsAdmin { get; set; }
 
         public ICollection<UserValue> UserValues { get; set; } = new List<UserValue>();
         public ICollection<AssessmentRun> AssessmentRuns { get; set; } = new List<AssessmentRun>();
+        public ICollection<TeamJoinRequest> JoinRequests { get; set; } = new List<TeamJoinRequest>();
+        public ICollection<Team> LedTeams { get; set; } = new List<Team>();
+        public ICollection<TeamMember> TeamMemberships { get; set; } = new List<TeamMember>();
     }
 }

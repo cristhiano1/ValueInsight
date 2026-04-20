@@ -1,0 +1,185 @@
+﻿@model ValueInsight.Frontend.Models.TeamWorkspaceViewModel
+
+@{
+    var canManageTeams = Model.ManageableTeams.Any();
+    var isAdminView = Model.IsAdmin;
+    var isLeaderView = !Model.IsAdmin && canManageTeams;
+    var isMemberOnlyView = !canManageTeams && Model.CurrentTeamId.HasValue;
+    var hasPendingJoinRequest = !string.IsNullOrWhiteSpace(Model.JoinRequestStatus) && string.Equals(Model.JoinRequestStatus, "Pending", StringComparison.OrdinalIgnoreCase);
+    var isUnassignedView = !canManageTeams && !Model.CurrentTeamId.HasValue && !hasPendingJoinRequest;
+    var isPendingApprovalView = !canManageTeams && !Model.CurrentTeamId.HasValue && hasPendingJoinRequest;
+
+
+    ViewData["Title"] = isAdminView
+        ? "Admin workspace"
+        : isLeaderView
+            ? "Leader workspace"
+            : "Team workspace";
+
+    var pageBadge = isAdminView
+        ? "Admin workspace"
+        : isLeaderView
+            ? "Leader workspace"
+            : "Team workspace";
+
+    var pageHeading = isAdminView
+        ? "Manage teams, leaders, and approvals"
+        : isLeaderView
+            ? "Lead your team and review requests"
+            : isMemberOnlyView
+                ? "Your team access and progress"
+                : "Join and track your team access";
+
+}
+
+<section class="container py-5 text-white">
+    <div class="d-flex flex-wrap justify-content-between gap-3 align-items-start mb-4">
+        <div>
+            <div class="vi-badge mb-3">@pageBadge</div>
+            <h1 class="mb-2">@pageHeading</h1>
+
+        </div>
+
+        @* <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+
+            @if (!isAdminView)
+            {
+                <a class="btn btn-outline-info" asp-controller="Teams" asp-action="Join">Join a team</a>
+            }
+        </div> *@
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.JoinRequestStatus))
+    {
+        <div class="alert alert-info mb-4">
+            Your latest join request for
+            <strong>@Model.JoinRequestTeamName</strong>
+            is
+            <strong>@Model.JoinRequestStatus</strong>
+            @if (Model.JoinRequestedAtUtc.HasValue)
+            {
+                <span> · sent @Model.JoinRequestedAtUtc.Value.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</span>
+            }
+        </div>
+    }
+
+
+    @if (Model.ManageableTeams.Any())
+    {
+        <div class="row g-4">
+            @foreach (var team in Model.ManageableTeams)
+            {
+                <div class="col-lg-6">
+                    <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                            <div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                                    <h2 class="h4 mb-0">@team.Name</h2>
+
+                                    @if (Model.IsAdmin)
+                                    {
+                                        <span class="badge bg-danger-subtle text-light border border-danger-subtle">
+                                            Admin access
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info text-dark">
+                                            Leader access
+                                        </span>
+                                    }
+                                </div>
+
+                                <div class="text-white-50 small">Invite code: @team.InviteCode</div>
+                                <div class="text-white-50 small">Leader: @(team.LeaderName ?? "Not assigned")</div>
+                            </div>
+
+                            <span class="badge @(team.TeamReportReady ? "bg-success" : "bg-secondary")">
+                                @(team.TeamReportReady ? "Report ready" : "Waiting")
+                            </span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-4">
+                                <div class="small text-white-50">Members</div>
+                                <div class="h5 mb-0">@team.MembersCount</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-white-50">Completed</div>
+                                <div class="h5 mb-0">@team.CompletedMembers</div>
+                            </div>
+                            <div class="col-4">
+                                <div class="small text-white-50">Requests</div>
+                                <div class="h5 mb-0">@team.PendingJoinRequests</div>
+                            </div>
+                        </div>
+
+
+                        <div class="d-grid gap-2 d-md-flex">
+                            <a class="btn vi-nav-cta"
+                               asp-controller="Teams"
+                               asp-action="Manage"
+                               asp-route-teamId="@team.Id">
+                                Open management
+                            </a>
+
+                            <a class="btn btn-outline-light"
+                               asp-controller="Reports"
+                               asp-action="Team"
+                               asp-route-teamId="@team.Id">
+                                Open team report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else if (isMemberOnlyView)
+    {
+        <div class="vi-card-glass vi-card-glass--light p-4">
+            <h2 class="h5 mb-3">Member access</h2>
+            <p class="text-white-50 mb-4">
+                You are assigned to a team.
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap">
+
+                <a class="btn btn-outline-light"
+                   asp-controller="Dashboard"
+                   asp-action="Index">
+                    Back to dashboard
+                </a>
+            </div>
+        </div>
+    }
+
+    else if (isPendingApprovalView)
+    {
+        <div class="vi-card-glass vi-card-glass--light p-4">
+            <h2 class="h5 mb-3">Join request awaiting approval</h2>
+            <p class="text-white-50 mb-4">
+                Your join request has been sent and is still waiting for team approval. You can track the latest status above.
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Back to dashboard</a>
+            </div>
+        </div>
+    }
+    else if (isUnassignedView)
+    {
+        <div class="vi-card-glass vi-card-glass--light p-4">
+            <h2 class="h5 mb-3">No team assigned yet</h2>
+            <p class="text-white-50 mb-4">
+                You are not assigned to any team yet. Use an invite code to send a join request.
+            </p>
+
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn vi-nav-cta" asp-controller="Teams" asp-action="Join">Join a team</a>
+                <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Back to dashboard</a>
+            </div>
+        </div>
+    }
+</section>

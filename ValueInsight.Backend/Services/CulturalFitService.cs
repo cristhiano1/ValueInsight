@@ -2,7 +2,6 @@
 using ValueInsight.Backend.Data;
 using ValueInsight.Backend.Dtos;
 using ValueInsight.Backend.Helpers;
-using ValueInsight.Backend.Models;
 
 namespace ValueInsight.Backend.Services;
 
@@ -17,16 +16,17 @@ public class CulturalFitService
 
     public async Task<CulturalFitResponseDtos?> CalculateTeamAlignment(int teamId)
     {
-        var team = await _context.Teams
-            .Include(t => t.Users)
+        var teamMembers = await _context.TeamMembers
+            .Where(tm => tm.TeamId == teamId)
+            .Include(tm => tm.User)
                 .ThenInclude(u => u.UserValues)
-            .FirstOrDefaultAsync(t => t.Id == teamId);
+            .ToListAsync();
 
-        if (team == null)
+        if (!teamMembers.Any())
             return null;
 
-        var top5Lists = team.Users
-            .Select(u => u.UserValues.OrderBy(uv => uv.Rank).Take(5).Select(uv => uv.ValueId).ToList())
+        var top5Lists = teamMembers
+            .Select(tm => tm.User.UserValues.OrderBy(uv => uv.Rank).Take(5).Select(uv => uv.ValueId).ToList())
             .Where(x => x.Count == 5)
             .ToList();
 
@@ -40,18 +40,27 @@ public class CulturalFitService
     public async Task<(double score, string label, double categoryAlignment, double topOverlap, double dominanceMatch, double tensionScore)?> CalculateForUser(int userId)
     {
         var user = await _context.Users
-            .Include(u => u.Team)
             .Include(u => u.UserValues)
                 .ThenInclude(uv => uv.Value)
             .FirstOrDefaultAsync(u => u.Id == userId);
 
-        if (user?.TeamId == null)
+        if (user == null)
             return null;
 
-        var teammates = await _context.Users
-            .Where(u => u.TeamId == user.TeamId && u.Id != user.Id)
-            .Include(u => u.UserValues)
-                .ThenInclude(uv => uv.Value)
+        var teamId = await _context.TeamMembers
+            .Where(tm => tm.UserId == userId)
+            .Select(tm => (int?)tm.TeamId)
+            .FirstOrDefaultAsync();
+
+        if (!teamId.HasValue)
+            return null;
+
+        var teammates = await _context.TeamMembers
+            .Where(tm => tm.TeamId == teamId.Value && tm.UserId != userId)
+            .Include(tm => tm.User)
+                .ThenInclude(u => u.UserValues)
+                    .ThenInclude(uv => uv.Value)
+            .Select(tm => tm.User)
             .ToListAsync();
 
         if (!user.UserValues.Any() || !teammates.Any())
