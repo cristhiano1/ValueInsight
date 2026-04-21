@@ -74,7 +74,7 @@ public class ReportsController : Controller
         var token = HttpContext.Session.GetString("JWToken");
         var client = _httpClientFactory.CreateClient();
         client.BaseAddress = new Uri(_configuration["ApiSettings:BaseUrl"]!);
-
+        client.Timeout = TimeSpan.FromMinutes(3);
         if (!string.IsNullOrWhiteSpace(token))
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
