@@ -9,4 +9,4 @@ RUN /bin/sh -c "ollama serve & \
     ollama pull phi3:mini && \
     pkill ollama"
 
-CMD ["ollama", "serve"]
+CMD ["serve"]
