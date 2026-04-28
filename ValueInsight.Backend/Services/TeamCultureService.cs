@@ -161,13 +161,32 @@ public class TeamCultureService
         var tensionFields = new List<string>();
 
         if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.22)
-            tensionFields.Add("Autonomy vs structure");
+            tensionFields.Add("Autonomy vs structure – this may create different expectations on how work should be done.");
         if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.22)
-            tensionFields.Add("Results vs relationships");
+            tensionFields.Add("Results vs relationships – balancing performance and collaboration may be a challenge.");
         if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.20 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20)
-            tensionFields.Add("Innovation vs stability");
+            tensionFields.Add("Innovation vs stability – this may create tension between change and consistency.");
+        if (teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20 && teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.20)
+            tensionFields.Add("Control vs Trust - this can create mixed expectations.");
+        if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.18 &&
+            teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
+        {
+            tensionFields.Add("Flexibility vs Planning – preferences for structure vs adaptability may vary.");
+        }
+
+        if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.18 &&
+            teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
+        {
+            tensionFields.Add("Experimentation vs Consistency – trying new things vs following routines may create friction.");
+        }
+
+        if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.18 &&
+            teamProfile.GetValueOrDefault(ValueCategory.MeaningAndPurpose) >= 0.18)
+        {
+            tensionFields.Add("Performance vs Purpose – short-term results and long-term meaning may compete.");
+        }
         if (!tensionFields.Any())
-            tensionFields.Add("No major tension field detected yet");
+            tensionFields.Add("No Value conflicts detected yet");
 
         return tensionFields;
     }
