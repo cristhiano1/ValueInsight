@@ -91,12 +91,15 @@
                             </ul>
                         </div>
                     }
-
+ 
+                    
                     @if (!string.IsNullOrWhiteSpace(Model.CoachingResult.AICoachingAdvice))
                     {
                         <div>
-                            <h3 class="h6 text-info-emphasis">Detailed AI team advice</h3>
-                            <div class="text-white-50" style="white-space: pre-line;">@Model.CoachingResult.AICoachingAdvice</div>
+                            <h3 class="h6 text-info-emphasis">Detailed AI advice</h3>
+                            <div class="text-white-50">
+                                @Html.Raw(FormatCoachingText(Model.CoachingResult.AICoachingAdvice))
+                            </div>
                         </div>
                     }
                 }
@@ -109,3 +112,20 @@
         
     </div>
 </section>
+
+@functions {
+    public string FormatCoachingText(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return "";
+
+        var encoded = System.Net.WebUtility.HtmlEncode(text);
+               
+        encoded = System.Text.RegularExpressions.Regex.Replace(
+            encoded,
+            @"(\d+\.\s*)?([^:\n]+:)",
+            "<span class=\"coach-heading\">$1$2</span>"
+        );
+
+        return encoded.Replace("\n", "<br />");
+    }
+}
