@@ -37,9 +37,6 @@ namespace ValueInsight.Backend.Services
             };
 
             DetermineAlignmentLevel(response);
-            AnalyzeStrengths(response, request.DominantValues);
-            GenerateBaseRecommendations(response, request);
-            BuildGoalSuggestions(response, request);
 
             var aiAdvice = await GenerateUserAIRecommendations(request, response);
 
@@ -50,6 +47,10 @@ namespace ValueInsight.Backend.Services
             }
             else
             {
+                // Only populate deterministic suggestions when AI advice is unavailable.
+                AnalyzeStrengths(response, request.DominantValues);
+                GenerateBaseRecommendations(response, request);
+                BuildGoalSuggestions(response, request);
                 response.AICoachingAdvice = BuildDeterministicFallbackAdvice(request, response);
                 response.AIEnhanced = false;
             }
@@ -70,10 +71,10 @@ namespace ValueInsight.Backend.Services
                 AlignmentScore = request.AlignmentScore,
                 PolarizationScore = request.PolarizationScore,
                 MaturityIndex = request.MaturityIndex,
-                Strengths = BuildTeamStrengths(request),
-                Risks = BuildTeamRisks(request),
-                LeadershipAdvice = BuildLeadershipAdvice(request),
-                SuggestedInterventions = BuildTeamInterventions(request)
+                Strengths = new List<string>(),
+                Risks = new List<string>(),
+                LeadershipAdvice = new List<string>(),
+                SuggestedInterventions = new List<string>()
             };
 
             var aiAdvice = await GenerateTeamAIRecommendations(request, response);
@@ -84,6 +85,11 @@ namespace ValueInsight.Backend.Services
             }
             else
             {
+                // Only populate deterministic suggestions when AI advice is unavailable.
+                response.Strengths = BuildTeamStrengths(request);
+                response.Risks = BuildTeamRisks(request);
+                response.LeadershipAdvice = BuildLeadershipAdvice(request);
+                response.SuggestedInterventions = BuildTeamInterventions(request);
                 response.AICoachingAdvice = BuildTeamFallbackAdvice(request, response);
                 response.AIEnhanced = false;
             }
@@ -258,7 +264,9 @@ namespace ValueInsight.Backend.Services
                     options = new
                     {
                         temperature = 0.3,
-                        num_predict = 350
+                        num_predict = int.TryParse(_configuration["Ollama:NumPredict"], out var parsedNumPredict)
+                            ? parsedNumPredict
+                            : 700
                     }
                 };
 
@@ -320,20 +328,30 @@ Linked value: {linkedValue}
 Goal rationale: {goalRationale}
 Reflection notes: {reflectionText}
 
-Write:
-1. Situation summary
-2. Likely energy drains
-3. Strengths this person brings
-4. 3 practical actions for the next 7 days
-5. 4 reflective coaching questions
-6. One short note to the team leader
-7. One goal suggestion linked to one top value
+Write exactly these 6 sections only:
 
-Important:
-- Keep it under 350 words.
-- Be specific and realistic.
-- If no challenge is provided, clearly say the advice is general.
-- If a goal is provided, connect the coaching directly to that goal and the linked value.
+1. Situation Summary
+2. Cultural Risks
+3. Strengths This Person Brings
+4. Practical Actions for the Next 7 Days
+   - exactly 3 bullet points
+5. Reflective Coaching Questions
+   - exactly 3 questions
+6. Goal Suggestion Linked to One Top Value
+
+Rules:
+- Do NOT create any additional sections beyond these 7.
+- Do NOT repeat any section.
+-Keep total response between 250–350 words.
+- Each section must be short and focused.
+-Finish every section completely; do not stop mid-sentence.
+- Practical Actions must contain exactly 3 bullet points only.
+- Reflective Coaching Questions must contain exactly 3 questions only.
+- Section 6 must be one short paragraph.
+- Do not include notes, disclaimers, or meta commentary.
+- If no challenge is provided, say: "This advice is general because no specific challenge was provided."
+- If a goal is provided, connect the advice directly to that goal and the linked value.
+- Stop after section 6.
 """;
         }
 
@@ -356,17 +374,25 @@ Lowest represented values: {lowestValues}
 Shared core values: {sharedValues}
 Tension fields: {tensions}
 
-Write:
-1. Team culture summary
-2. Strengths of the current culture
-3. Cultural risks and early warning signals
-4. Leadership advice for the next 30 days
-5. 3 suggested team interventions or workshop ideas
-6. One team goal that should be connected to the culture
+Write exactly these 6 sections only:
 
-Important:
-- Keep it under 380 words.
-- Be concrete and realistic.
+1. Team Culture Summary
+2. Strengths of the Current Culture
+3. Cultural Risks and Early Warning Signals
+4. Leadership Advice for the Next 30 Days
+5. Suggested Team Interventions 
+6. Team Goal 
+
+Rules:
+- Do NOT create any additional sections beyond these 6.
+- Do NOT repeat any section.
+-Keep total response between 250–350 words.
+- Each section must be short and focused.
+- Suggested Interventions must contain exactly 3 bullet points only.
+- Team Goal must be a single paragraph (no bullets).
+- Do not include notes, disclaimers, or meta commentary.
+-Finish every section completely; do not stop mid-sentence.
+- Stop after section 6.
 """;
         }
 
@@ -384,7 +410,7 @@ Important:
 Situation summary
 You are currently showing {analysis.AlignmentLevel.ToLowerInvariant()} with a score of {request.AlignmentScore:0.0}/100. Your strongest values are {dominantValues}, while the team is currently shaped most by {teamTopValues}.
 
-Likely energy drains
+Cultural Risks
 A likely source of friction is: {challenge}. The main team tension field is {tension}. Watch for repeated frustration, withdrawal, or overcompensation in meetings.
 
 Coaching advice for the next 30 days
