@@ -133,16 +133,16 @@ public class ReportsController : ControllerBase
             return NotFound();
 
         var runs = await _context.AssessmentRuns
-            .Where(x => x.UserId == userId)
+            .Where(x => x.UserId == userId && x.Status == "Completed")
             .Include(x => x.ValueSelections)
                 .ThenInclude(x => x.Value)
-            .OrderByDescending(x => x.CreatedAtUtc)
+            .OrderByDescending(x => x.CompletedAtUtc ?? x.CreatedAtUtc)
             .ToListAsync();
 
         var history = runs.Select(run => new AssessmentHistoryItemDto
         {
             AssessmentRunId = run.Id,
-            CompletedAtUtc = run.CreatedAtUtc,
+            CompletedAtUtc = run.CompletedAtUtc ?? run.CreatedAtUtc,
             TopValues = run.ValueSelections
                 .OrderBy(x => x.Rank)
                 .Take(3)
@@ -186,16 +186,9 @@ public class ReportsController : ControllerBase
     [HttpGet("team/{teamId:int}")]
     public async Task<IActionResult> GetTeamReport(int teamId)
     {
-        // =========================
-        // 🔒 VALIDACIÓN ROLE
-        // =========================
-        var role = User.FindFirst(ClaimTypes.Role)?.Value;
-        if (role != "Coach")
+        if (!User.IsInRole("Coach"))
             return Forbid();
 
-        // =========================
-        // 🔒 VALIDACIÓN USER
-        // =========================
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         if (!int.TryParse(userIdClaim, out var userId))
             return Unauthorized();
@@ -205,9 +198,6 @@ public class ReportsController : ControllerBase
         if (user == null || user.TeamId != teamId)
             return Forbid();
 
-        // =========================
-        // 📊 VALIDACIÓN TEAM DATA
-        // =========================
         var teamUsers = await _context.Users
             .Where(u => u.TeamId == teamId)
             .Select(u => u.Id)
@@ -222,9 +212,6 @@ public class ReportsController : ControllerBase
         if (usersWithValues.Count == 0)
             return BadRequest("No team data available yet.");
 
-        // =========================
-        // 📊 TU CÓDIGO ORIGINAL
-        // =========================
         var report = await _teamCultureService.BuildTeamReport(teamId);
         if (report == null)
             return NotFound();

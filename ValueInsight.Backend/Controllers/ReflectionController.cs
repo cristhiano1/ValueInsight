@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ValueInsight.Backend.Data;
 using ValueInsight.Backend.Dtos;
 using ValueInsight.Backend.Models;
+using ValueInsight.Backend.Services;
 
 namespace ValueInsight.Backend.Controllers
 {
@@ -14,9 +15,11 @@ namespace ValueInsight.Backend.Controllers
     public class ReflectionController : ControllerBase
     {
         private readonly ValueInsightDbContext _context;
-        private readonly ValueInsight.Backend.Services.AssessmentHistoryService _assessmentHistoryService;
+        private readonly AssessmentHistoryService _assessmentHistoryService;
 
-        public ReflectionController(ValueInsightDbContext context, ValueInsight.Backend.Services.AssessmentHistoryService assessmentHistoryService)
+        public ReflectionController(
+            ValueInsightDbContext context,
+            AssessmentHistoryService assessmentHistoryService)
         {
             _context = context;
             _assessmentHistoryService = assessmentHistoryService;
@@ -78,8 +81,26 @@ namespace ValueInsight.Backend.Controllers
             }
 
             await _context.SaveChangesAsync();
-            await _assessmentHistoryService.SyncLatestRunAsync(userId);
-            return Ok(new { message = "Reflection answers saved." });
+
+            var containsTopValueAnswers = request.Answers.Any(x =>
+                !string.IsNullOrWhiteSpace(x.QuestionId) &&
+                x.QuestionId.StartsWith("topvalue-"));
+
+            if (containsTopValueAnswers)
+            {
+                await _assessmentHistoryService.CompleteActiveRunAsync(userId);
+            }
+            else
+            {
+                await _assessmentHistoryService.EnsureActiveRunAsync(userId);
+                await _assessmentHistoryService.SyncActiveRunAsync(userId);
+            }
+
+            return Ok(new
+            {
+                message = "Reflection answers saved.",
+                completedAssessment = containsTopValueAnswers
+            });
         }
     }
 }

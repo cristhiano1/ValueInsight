@@ -29,9 +29,6 @@ public class ReportsController : Controller
         return client;
     }
 
-    // =========================
-    // PERSONAL → TODOS LOS USERS
-    // =========================
     [HttpGet]
     public async Task<IActionResult> Personal()
     {
@@ -55,9 +52,6 @@ public class ReportsController : Controller
         return View(model);
     }
 
-    // =========================
-    // COACHING → SOLO COACH
-    // =========================
     [HttpGet]
     public async Task<IActionResult> CoachingPrompts()
     {
@@ -127,17 +121,35 @@ public class ReportsController : Controller
         return View(pageModel);
     }
 
-    // =========================
-    // TEAM → SOLO COACH
-    // =========================
     [HttpGet]
-    public async Task<IActionResult> Team(int teamId)
+    public async Task<IActionResult> Team(int? teamId)
     {
+        var token = HttpContext.Session.GetString("JWToken");
+        var role = HttpContext.Session.GetString("Role");
+        var teamIdFromSession = HttpContext.Session.GetString("TeamId");
+
+        if (string.IsNullOrWhiteSpace(token))
+            return RedirectToAction("Login", "Account");
+
+        if (role != "Coach")
+            return RedirectToAction("Index", "Dashboard");
+
+        if (!teamId.HasValue)
+        {
+            if (int.TryParse(teamIdFromSession, out var parsedTeamId))
+                teamId = parsedTeamId;
+            else
+                return RedirectToAction("Index", "Dashboard");
+        }
+
         var client = CreateAuthorizedClient();
 
-        var response = await client.GetAsync($"/api/reports/team/{teamId}");
+        var response = await client.GetAsync($"/api/reports/team/{teamId.Value}");
         if (!response.IsSuccessStatusCode)
-            return RedirectToAction(nameof(Personal));
+        {
+            TempData["TeamReportError"] = "Team report could not be loaded.";
+            return RedirectToAction("Index", "Dashboard");
+        }
 
         var json = await response.Content.ReadAsStringAsync();
 
@@ -147,9 +159,6 @@ public class ReportsController : Controller
                 PropertyNameCaseInsensitive = true
             }) ?? new TeamReportViewModel();
 
-        // =========================
-        // 🤖 NUEVO: LLAMADA AI
-        // =========================
         try
         {
             var aiPayload = new

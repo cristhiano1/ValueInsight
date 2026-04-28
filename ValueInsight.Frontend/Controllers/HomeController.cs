@@ -32,6 +32,11 @@ namespace ValueInsight.Frontend.Controllers
         [HttpGet]
         public IActionResult Start()
         {
+            var token = HttpContext.Session.GetString("JWToken");
+
+            if (string.IsNullOrWhiteSpace(token))
+                return RedirectToAction("Login", "Account");
+
             return View();
         }
     }

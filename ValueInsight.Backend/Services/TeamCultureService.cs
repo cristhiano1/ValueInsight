@@ -72,16 +72,10 @@ public class TeamCultureService
         var polarization = CultureAnalysisHelper.CalculatePolarization(teamProfile);
         var maturity = CultureAnalysisHelper.CalculateMaturityIndex(alignment, polarization, teamProfile);
 
-        // =========================
-        // ✅ NUEVO — DISPERSION
-        // =========================
         var dispersion = teamProfile.Values.Any()
             ? teamProfile.Values.Max() - teamProfile.Values.Min()
             : 0;
 
-        // =========================
-        // ✅ NUEVO — COMPLETION RATE
-        // =========================
         var totalUsers = team.Users.Count;
         var completedUsers = usersWithValues.Count;
 
@@ -115,30 +109,24 @@ public class TeamCultureService
         {
             TeamId = team.Id,
             TeamName = team.Name,
-            TeamSize = usersWithValues.Count,
+            TeamSize = totalUsers,
             CultureType = CultureAnalysisHelper.ClassifyCultureType(teamProfile),
             AlignmentScore = Math.Round(alignment * 100, 1),
             PolarizationScore = Math.Round(polarization * 100, 1),
             MaturityIndex = maturity,
-
-            // ✅ NUEVO
             DispersionScore = Math.Round(dispersion * 100, 1),
             CompletionRate = Math.Round(completionRate, 1),
-
             CategoryProfile = teamProfile.Select(kvp => new CategoryScoreDto
             {
                 Category = CultureAnalysisHelper.ToDisplayName(kvp.Key),
                 Percentage = Math.Round(kvp.Value * 100, 1)
             }).OrderByDescending(x => x.Percentage).ToList(),
-
             TopValues = valueFrequency.Take(5).ToList(),
-
             LowestValues = valueFrequency
                 .OrderBy(v => v.Rank)
                 .ThenBy(v => v.Name)
                 .Take(5)
                 .ToList(),
-
             SharedCoreValues = sharedValues,
             TensionFields = tensionFields
         };

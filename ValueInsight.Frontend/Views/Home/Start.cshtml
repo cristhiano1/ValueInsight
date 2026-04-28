@@ -1,5 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Reflection";
+    var nextUrl = Url.Action("SelectTen", "ValuesFlow");
 }
 
 <section class="vi-reflection">
@@ -24,7 +25,6 @@
         </div>
 
         <div class="row g-4">
-            <!-- LEFT: questions -->
             <div class="col-lg-8">
                 <div class="vi-card-glass vi-card-glass--light">
                     <h2 class="h5 fw-semibold mb-3">Reflection questions</h2>
@@ -62,19 +62,16 @@
                             Back to Home
                         </a>
 
-                        <a class="btn vi-btn-primary ms-auto" asp-controller="ValuesFlow" asp-action="SelectTen">
+                        <button id="nextBtn" class="btn vi-btn-primary ms-auto" type="button">
                             Next →
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
-
-
         </div>
 
     </div>
 </section>
-
 
 @section Scripts {
     <script>
@@ -89,6 +86,7 @@
             const saveDot = document.getElementById("viSaveDot");
             const saveText = document.getElementById("viSaveText");
             const clearBtn = document.getElementById("clearBtn");
+            const nextBtn = document.getElementById("nextBtn");
 
             let saveTimer = null;
 
@@ -163,11 +161,14 @@
 
                     if (response.ok) {
                         setSavingUI("saved", new Date().toISOString());
+                        return true;
                     } else {
                         setSavingUI("idle");
+                        return false;
                     }
                 } catch {
                     setSavingUI("idle");
+                    return false;
                 }
             }
 
@@ -176,8 +177,8 @@
 
                 if (saveTimer) clearTimeout(saveTimer);
 
-                saveTimer = setTimeout(() => {
-                    saveAnswers();
+                saveTimer = setTimeout(async () => {
+                    await saveAnswers();
                 }, 500);
             }
 
@@ -191,6 +192,26 @@
                 await saveAnswers();
             }
 
+            async function saveAndContinue() {
+                if (saveTimer) {
+                    clearTimeout(saveTimer);
+                    saveTimer = null;
+                }
+
+                setSavingUI("saving");
+                nextBtn.disabled = true;
+
+                const ok = await saveAnswers();
+
+                if (ok) {
+                    window.location.href = "@nextUrl";
+                    return;
+                }
+
+                nextBtn.disabled = false;
+                alert("Your reflection could not be saved. Please try again.");
+            }
+
             for (const f of fields) {
                 const el = document.getElementById(f.id);
                 if (!el) continue;
@@ -201,6 +222,10 @@
                 if (confirm("Clear all your saved reflection answers?")) {
                     await clearAll();
                 }
+            });
+
+            nextBtn?.addEventListener("click", async () => {
+                await saveAndContinue();
             });
 
             loadAnswers();

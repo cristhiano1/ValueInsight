@@ -39,10 +39,10 @@
             <div class="col-auto">
                 <div class="vi-card-glass vi-card-glass--light p-3 text-center">
                     <div class="small text-white-50">Polarization</div>
-                    <div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")</div>
+                    <div class="h3 mb-0">@Model.PolarizationScore.ToString("0.0")%</div>
                     <div class="small text-white-50">
-                        @(Model.PolarizationScore > 0.7 ? "High tension" :
-                                                Model.PolarizationScore > 0.4 ? "Moderate tension" :
+                        @(Model.PolarizationScore > 70 ? "High tension" :
+                                                Model.PolarizationScore > 40 ? "Moderate tension" :
                                                 "Low tension")
                     </div>
                 </div>
@@ -62,9 +62,6 @@
         </div>
     </div>
 
-    <!-- ========================= -->
-    <!-- 🤖 NUEVO: AI TEAM INSIGHT -->
-    <!-- ========================= -->
     <div class="row g-4 mb-4">
         <div class="col-12">
             <div class="vi-card-glass vi-card-glass--light p-4">
@@ -82,9 +79,7 @@
         </div>
     </div>
 
-    <!-- RESTO IGUAL -->
     <div class="row g-4">
-
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Category profile</h2>
@@ -177,6 +172,5 @@
                 }
             </div>
         </div>
-
     </div>
 </section>

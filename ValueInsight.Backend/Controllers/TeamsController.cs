@@ -18,7 +18,6 @@ namespace ValueInsight.Backend.Controllers
             _context = context;
         }
 
-        // 🔹 Público (para register)
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetTeams()
@@ -35,7 +34,6 @@ namespace ValueInsight.Backend.Controllers
             return Ok(teams);
         }
 
-        // 🔒 SOLO COACH (se mantiene)
         [HttpGet("{id}")]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<Team>> GetTeam(int id)
@@ -50,7 +48,6 @@ namespace ValueInsight.Backend.Controllers
             return team;
         }
 
-        // 🔒 SOLO COACH (se mantiene)
         [HttpPost]
         [Authorize(Roles = "Coach")]
         public async Task<ActionResult<Team>> CreateTeam(Team team)
@@ -61,7 +58,6 @@ namespace ValueInsight.Backend.Controllers
             return CreatedAtAction(nameof(GetTeam), new { id = team.Id }, team);
         }
 
-        // 🔒 SOLO COACH (se mantiene)
         [HttpPut("{id}")]
         [Authorize(Roles = "Coach")]
         public async Task<IActionResult> UpdateTeam(int id, Team team)
@@ -75,7 +71,6 @@ namespace ValueInsight.Backend.Controllers
             return NoContent();
         }
 
-        // 🔒 SOLO COACH (se mantiene)
         [HttpDelete("{id}")]
         [Authorize(Roles = "Coach")]
         public async Task<IActionResult> DeleteTeam(int id)
@@ -91,7 +86,6 @@ namespace ValueInsight.Backend.Controllers
             return NoContent();
         }
 
-        // 🆕 ENDPOINT PARA COACH DASHBOARD
         [HttpGet("{id}/overview")]
         [Authorize]
         public async Task<IActionResult> GetTeamOverview(int id)
@@ -112,8 +106,6 @@ namespace ValueInsight.Backend.Controllers
                 teamSize = teamSize,
                 completedAssessments = 0,
                 pendingAssessments = teamSize,
-
-                // 🔥 🔥 🔥 FIX CLAVE (NO TOCA TU LÓGICA)
                 teamCultureType = "No data",
                 culturalFitScore = (double?)null,
                 latestAssessmentCompletedAtUtc = (DateTime?)null

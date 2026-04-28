@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ValueInsight.Backend.Data;
 using ValueInsight.Backend.Dtos;
 using ValueInsight.Backend.Models;
+using ValueInsight.Backend.Services;
 
 namespace ValueInsight.Backend.Controllers
 {
@@ -14,9 +15,11 @@ namespace ValueInsight.Backend.Controllers
     public class UserValuesController : ControllerBase
     {
         private readonly ValueInsightDbContext _context;
-        private readonly ValueInsight.Backend.Services.AssessmentHistoryService _assessmentHistoryService;
+        private readonly AssessmentHistoryService _assessmentHistoryService;
 
-        public UserValuesController(ValueInsightDbContext context, ValueInsight.Backend.Services.AssessmentHistoryService assessmentHistoryService)
+        public UserValuesController(
+            ValueInsightDbContext context,
+            AssessmentHistoryService assessmentHistoryService)
         {
             _context = context;
             _assessmentHistoryService = assessmentHistoryService;
@@ -60,8 +63,15 @@ namespace ValueInsight.Backend.Controllers
             }
 
             await _context.SaveChangesAsync();
-            var run = await _assessmentHistoryService.CreateRunFromCurrentStateAsync(userId);
-            return Ok(new { message = "Top 5 saved successfully.", assessmentRunId = run.Id });
+
+            var run = await _assessmentHistoryService.EnsureActiveRunAsync(userId);
+            await _assessmentHistoryService.SyncActiveRunAsync(userId);
+
+            return Ok(new
+            {
+                message = "Top 5 saved successfully.",
+                assessmentRunId = run.Id
+            });
         }
 
         [HttpGet("mine")]

@@ -15,8 +15,6 @@
     <header class="vi-header">
         <nav class="navbar navbar-expand-lg vi-navbar">
             <div class="container-fluid px-0">
-
-                <!-- BRAND -->
                 <a class="navbar-brand vi-brand" asp-controller="Home" asp-action="Index">
                     Value<span class="vi-brand-accent">Insight</span>
                 </a>
@@ -26,7 +24,6 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
-                <!-- LINKS -->
                 <div class="collapse navbar-collapse" id="viNav">
                     @{
                         var token = Context.Session.GetString("JWToken");
@@ -34,8 +31,6 @@
                     }
 
                     <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
-
-                        <!-- HOME -->
                         <li class="nav-item">
                             <a class="nav-link vi-navlink" asp-controller="Home" asp-action="Index">
                                 Home
@@ -44,7 +39,6 @@
 
                         @if (string.IsNullOrEmpty(token))
                         {
-                            <!-- NOT LOGGED -->
                             <li class="nav-item">
                                 <a class="nav-link vi-navlink" asp-controller="Account" asp-action="Login">
                                     Login
@@ -59,15 +53,12 @@
                         }
                         else
                         {
-                            <!-- LOGGED -->
-
                             <li class="nav-item">
                                 <a class="nav-link vi-navlink" asp-controller="Dashboard" asp-action="Index">
                                     Dashboard
                                 </a>
                             </li>
 
-                            <!-- USER -->
                             @if (role != "Coach")
                             {
                                 <li class="nav-item">
@@ -77,13 +68,15 @@
                                 </li>
                             }
 
-                            <!-- COACH -->
                             @if (role == "Coach")
                             {
+                                var teamId = Context.Session.GetString("TeamId");
+
                                 <li class="nav-item">
                                     <a class="nav-link vi-navlink"
                                        asp-controller="Reports"
-                                       asp-action="Team">
+                                       asp-action="Team"
+                                       asp-route-teamId="@teamId">
                                         Team Report
                                     </a>
                                 </li>

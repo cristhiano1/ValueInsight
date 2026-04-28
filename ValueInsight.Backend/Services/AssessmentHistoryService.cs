@@ -13,33 +13,53 @@ public class AssessmentHistoryService
         _context = context;
     }
 
-    public async Task<AssessmentRun> CreateRunFromCurrentStateAsync(int userId)
+    public async Task<AssessmentRun> EnsureActiveRunAsync(int userId)
     {
+        var activeRun = await _context.AssessmentRuns
+            .Where(x => x.UserId == userId && x.Status == "InProgress")
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .FirstOrDefaultAsync();
+
+        if (activeRun != null)
+            return activeRun;
+
         var run = new AssessmentRun
         {
             UserId = userId,
             CreatedAtUtc = DateTime.UtcNow,
             UpdatedAtUtc = DateTime.UtcNow,
-            Status = "Completed"
+            CompletedAtUtc = null,
+            Status = "InProgress"
         };
 
         _context.AssessmentRuns.Add(run);
         await _context.SaveChangesAsync();
 
-        await SyncRunWithCurrentStateAsync(userId, run.Id);
         return run;
     }
 
     public async Task SyncLatestRunAsync(int userId)
     {
-        var latestRunId = await _context.AssessmentRuns
-            .Where(x => x.UserId == userId)
-            .OrderByDescending(x => x.CreatedAtUtc)
-            .Select(x => (int?)x.Id)
-            .FirstOrDefaultAsync();
+        await SyncActiveRunAsync(userId);
+    }
 
-        if (latestRunId.HasValue)
-            await SyncRunWithCurrentStateAsync(userId, latestRunId.Value);
+    public async Task SyncActiveRunAsync(int userId)
+    {
+        var run = await EnsureActiveRunAsync(userId);
+        await SyncRunWithCurrentStateAsync(userId, run.Id);
+    }
+
+    public async Task CompleteActiveRunAsync(int userId)
+    {
+        var run = await EnsureActiveRunAsync(userId);
+
+        await SyncRunWithCurrentStateAsync(userId, run.Id);
+
+        run.Status = "Completed";
+        run.CompletedAtUtc = DateTime.UtcNow;
+        run.UpdatedAtUtc = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
     }
 
     private async Task SyncRunWithCurrentStateAsync(int userId, int runId)
