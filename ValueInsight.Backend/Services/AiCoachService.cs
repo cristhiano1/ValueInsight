@@ -491,5 +491,51 @@ Run a short workshop where the team defines one behavior to keep, one tension to
                 "Set one team goal and explicitly connect it to one shared core value."
             };
         }
+
+        public CoachingResponseDtos GenerateFallbackCoaching(CoachingRequestDtos request)
+        {
+            var response = new CoachingResponseDtos
+            {
+                UserId = request.UserId,
+                TeamId = request.TeamId,
+                AlignmentScore = request.AlignmentScore,
+                Strengths = new List<string>(),
+                DevelopmentAreas = new List<string>(),
+                CoachingRecommendations = new List<string>(),
+                GoalSuggestions = new List<string>()
+            };
+
+            DetermineAlignmentLevel(response);
+            AnalyzeStrengths(response, request.DominantValues);
+            GenerateBaseRecommendations(response, request);
+            BuildGoalSuggestions(response, request);
+
+            response.AICoachingAdvice = BuildDeterministicFallbackAdvice(request, response);
+            response.AIEnhanced = false;
+
+            return response;
+        }
+
+        public TeamCoachingResponseDtos GenerateFallbackTeamCoaching(TeamCoachingRequestDtos request)
+        {
+            var response = new TeamCoachingResponseDtos
+            {
+                TeamId = request.TeamId,
+                TeamName = request.TeamName,
+                CultureType = request.CultureType ?? string.Empty,
+                AlignmentScore = request.AlignmentScore,
+                PolarizationScore = request.PolarizationScore,
+                MaturityIndex = request.MaturityIndex,
+                Strengths = BuildTeamStrengths(request),
+                Risks = BuildTeamRisks(request),
+                LeadershipAdvice = BuildLeadershipAdvice(request),
+                SuggestedInterventions = BuildTeamInterventions(request),
+                AIEnhanced = false
+            };
+
+            response.AICoachingAdvice = BuildTeamFallbackAdvice(request, response);
+
+            return response;
+        }
     }
 }
