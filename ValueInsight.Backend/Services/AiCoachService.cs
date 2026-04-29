@@ -58,6 +58,37 @@ namespace ValueInsight.Backend.Services
             return response;
         }
 
+        // New: public method to explicitly generate fallback coaching (no AI) and return it.
+        public Task<CoachingResponseDtos> GenerateFallbackCoachingAsync(CoachingRequestDtos request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.AlignmentScore < 0 || request.AlignmentScore > 100)
+                throw new ArgumentException("Alignment score must be between 0 and 100.");
+
+            var response = new CoachingResponseDtos
+            {
+                UserId = request.UserId,
+                TeamId = request.TeamId,
+                AlignmentScore = request.AlignmentScore,
+                Strengths = new List<string>(),
+                DevelopmentAreas = new List<string>(),
+                CoachingRecommendations = new List<string>(),
+                GoalSuggestions = new List<string>()
+            };
+
+            // Determine alignment level and populate deterministic advice
+            DetermineAlignmentLevel(response);
+            AnalyzeStrengths(response, request.DominantValues);
+            GenerateBaseRecommendations(response, request);
+            BuildGoalSuggestions(response, request);
+            response.AICoachingAdvice = BuildDeterministicFallbackAdvice(request, response);
+            response.AIEnhanced = false;
+
+            return Task.FromResult(response);
+        }
+
         public async Task<TeamCoachingResponseDtos> GenerateTeamCoachingAsync(TeamCoachingRequestDtos request)
         {
             if (request == null)
