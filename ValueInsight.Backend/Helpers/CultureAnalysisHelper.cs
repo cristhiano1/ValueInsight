@@ -14,12 +14,22 @@ public static class CultureAnalysisHelper
         [ValueCategory.MeaningAndPurpose] = 1.00,
     };
 
+    // MODIFICADO: Lista ampliada de pares en tensión/conflicto
     private static readonly (ValueCategory Left, ValueCategory Right)[] TensionPairs =
     {
+        // Originales
         (ValueCategory.AutonomyAndFreedom, ValueCategory.StructureAndStability),
         (ValueCategory.ResultAndPerformance, ValueCategory.RelationAndTrust),
         (ValueCategory.StructureAndStability, ValueCategory.DevelopmentAndInnovation),
-        (ValueCategory.StructureAndStability, ValueCategory.RelationAndTrust)
+        (ValueCategory.StructureAndStability, ValueCategory.RelationAndTrust),
+
+        // Ampliados
+        (ValueCategory.MeaningAndPurpose, ValueCategory.ResultAndPerformance),
+        (ValueCategory.DevelopmentAndInnovation, ValueCategory.MeaningAndPurpose),
+        (ValueCategory.AutonomyAndFreedom, ValueCategory.RelationAndTrust),
+        (ValueCategory.AutonomyAndFreedom, ValueCategory.ResultAndPerformance),
+        (ValueCategory.MeaningAndPurpose, ValueCategory.StructureAndStability),
+        (ValueCategory.DevelopmentAndInnovation, ValueCategory.RelationAndTrust),
     };
 
     public static Dictionary<ValueCategory, double> BuildNormalizedCategoryProfile(IEnumerable<UserValue> values)

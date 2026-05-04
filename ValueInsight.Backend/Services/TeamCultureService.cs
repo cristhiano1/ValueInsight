@@ -156,43 +156,34 @@ public class TeamCultureService
         };
     }
 
+    // ---- AQUÍ VA SOLO EL MÉTODO MODIFICADO ----
     private static List<string> BuildTensionFields(Dictionary<ValueCategory, double> teamProfile)
     {
         var tensionFields = new List<string>();
+        const double threshold = 0.18;
 
-        if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.22)
-            tensionFields.Add("Autonomy vs structure – this may create different expectations on how work should be done.");
-        if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.22 && teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.22)
-            tensionFields.Add("Results vs relationships – balancing performance and collaboration may be a challenge.");
-        if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.20 && teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20)
-            tensionFields.Add("Innovation vs stability – this may create tension between change and consistency.");
-        if (teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20 && teamProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.20)
-            tensionFields.Add("Control vs Trust - this can create mixed expectations.");
-        if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.18 &&
-            teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
+        foreach (var (left, right) in typeof(CultureAnalysisHelper)
+                    .GetField("TensionPairs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+                    .GetValue(null) as (ValueCategory Left, ValueCategory Right)[]
+                ?? Array.Empty<(ValueCategory, ValueCategory)>())
         {
-            tensionFields.Add("Flexibility vs Planning – preferences for structure vs adaptability may vary.");
+            if (teamProfile.GetValueOrDefault(left) >= threshold && teamProfile.GetValueOrDefault(right) >= threshold)
+            {
+                tensionFields.Add($"{CultureAnalysisHelper.ToDisplayName(left)} vs {CultureAnalysisHelper.ToDisplayName(right)} – This tension might impact team expectations or routines.");
+            }
         }
 
-        if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.18 &&
-            teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
-        {
-            tensionFields.Add("Experimentation vs Consistency – trying new things vs following routines may create friction.");
-        }
-
-        if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.18 &&
-            teamProfile.GetValueOrDefault(ValueCategory.MeaningAndPurpose) >= 0.18)
-        {
-            tensionFields.Add("Performance vs Purpose – short-term results and long-term meaning may compete.");
-        }
         if (!tensionFields.Any())
             tensionFields.Add("No Value conflicts detected yet");
 
         return tensionFields;
     }
 
+    // ---- TODO EL RESTO DE TU CLASE SIGUE IGUAL ----
+
     private static List<TeamHistoryItemDto> BuildTeamHistory(List<User> teamUsers)
     {
+        // ... (sin cambios)
         var completedRuns = teamUsers
             .SelectMany(u => u.AssessmentRuns)
             .Where(r => r.Status == "Completed" && r.ValueSelections.Any())
@@ -272,6 +263,7 @@ public class TeamCultureService
         double currentPolarization,
         double currentMaturity)
     {
+        // ... (sin cambios)
         var previous = history.Skip(1).FirstOrDefault() ?? history.FirstOrDefault();
         if (previous == null)
         {

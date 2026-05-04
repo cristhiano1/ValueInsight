@@ -366,50 +366,23 @@ public class ReportsController : ControllerBase
         return Ok(report);
     }
 
+    // --------- SOLO ESTE MÉTODO ESTÁ MODIFICADO ---------
     private static List<string> BuildIndividualValueConflicts(Dictionary<ValueCategory, double> categoryProfile)
     {
         var conflicts = new List<string>();
+        const double threshold = 0.18;
 
-        if (categoryProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.20 &&
-            categoryProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.20)
+        foreach (var (left, right) in typeof(CultureAnalysisHelper)
+            .GetField("TensionPairs", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+            .GetValue(null) as (ValueCategory Left, ValueCategory Right)[]
+            ?? Array.Empty<(ValueCategory, ValueCategory)>())
         {
-            conflicts.Add("conflicts detected between: Freedom vs structure. You value both freedom and structure – this may create inner tension.");
-        }
-
-        if (categoryProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.20 &&
-            categoryProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.20)
-        {
-            conflicts.Add("conflicts detected between: Result vs Relation. You value both results and relationships – balancing them can be challenging.");
-        }
-
-        if (categoryProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.18 &&
-            categoryProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
-        {
-            conflicts.Add("conflicts detected between: Innovation vs stability. You value both innovation and stability – this may pull you in different directions.");
-        }
-        if (categoryProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18 &&
-            categoryProfile.GetValueOrDefault(ValueCategory.RelationAndTrust) >= 0.18)
-        {
-            conflicts.Add("conflicts detected between: Control vs Trust. You value both control and trust – this can create mixed expectations.");
-                
-        }
-        if (categoryProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.18 &&
-            categoryProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
-        {
-            conflicts.Add("conflicts detected between: Flexibility and Planning. you may sometimes feel pulled between adapting freely and following a clear plan.");
+            if (categoryProfile.GetValueOrDefault(left) >= threshold && categoryProfile.GetValueOrDefault(right) >= threshold)
+            {
+                conflicts.Add($"Conflict detected between: {CultureAnalysisHelper.ToDisplayName(left)} and {CultureAnalysisHelper.ToDisplayName(right)}. You strongly value both, which may create inner tension.");
+            }
         }
 
-        if (categoryProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.18 &&
-            categoryProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
-        {
-            conflicts.Add("conflicts detected between: Experimentation and Consistency. This may create tension between trying new things and keeping reliable routines.");
-        }
-
-        if (categoryProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.18 &&
-            categoryProfile.GetValueOrDefault(ValueCategory.MeaningAndPurpose) >= 0.18)
-        {
-            conflicts.Add("conflicts detected between: Performance and Purpose. This may create tension between short-term results and long-term meaning.");
-        }
         if (!conflicts.Any())
         {
             conflicts.Add("No conflicts detected yet.");
