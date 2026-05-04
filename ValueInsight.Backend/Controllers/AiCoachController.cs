@@ -68,14 +68,36 @@ public class AiCoachController : ControllerBase
             return StatusCode(500, "Internal server error");
         }
     }
+    //[HttpPost("fallback")]
+    //public ActionResult<CoachingResponseDtos> GenerateFallbackCoaching([FromBody] CoachingRequestDtos request)
+    //{
+    //    if (!ModelState.IsValid)
+    //        return BadRequest(ModelState);
+
+    //    var result = _aiCoachService.GenerateFallbackCoaching(request);
+    //    return Ok(result);
+    //}
+
     [HttpPost("fallback")]
-    public ActionResult<CoachingResponseDtos> GenerateFallbackCoaching([FromBody] CoachingRequestDtos request)
+    public async Task<ActionResult<CoachingResponseDtos>> GenerateFallbackCoaching([FromBody] CoachingRequestDtos request)
     {
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("Invalid fallback coaching request received.");
             return BadRequest(ModelState);
+        }
 
-        var result = _aiCoachService.GenerateFallbackCoaching(request);
-        return Ok(result);
+        try
+        {
+            _logger.LogInformation("Generating fallback coaching for user {UserId} in team {TeamId}", request.UserId, request.TeamId);
+            var result = await _aiCoachService.GenerateFallbackCoachingAsync(request);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating fallback coaching plan.");
+            return StatusCode(500, "Internal server error");
+        }
     }
     [HttpPost("fallback-team")]
     public ActionResult<TeamCoachingResponseDtos> GenerateFallbackTeamCoaching([FromBody] TeamCoachingRequestDtos request)

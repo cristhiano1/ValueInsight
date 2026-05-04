@@ -264,7 +264,7 @@
                     @if (Model.CoachingResult.DevelopmentAreas?.Any() == true)
                     {
                         <div class="mb-4">
-                            <h3 class="h6 text-info-emphasis">Development areas</h3>
+                            <h3 class="h6 text-info-emphasis">Cultural Risks</h3>
                             <ul class="text-white-50 mb-0">
                                 @foreach (var item in Model.CoachingResult.DevelopmentAreas)
                                 {
@@ -293,6 +293,18 @@
                             <h3 class="h6 text-info-emphasis">Goal alignment ideas</h3>
                             <ul class="text-white-50 mb-0">
                                 @foreach (var item in Model.CoachingResult.GoalSuggestions)
+                                {
+                                    <li class="mb-2">@item</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+                    @if (Model.CoachingResult.ReflectionQuestions?.Any() == true)
+                    {
+                        <div class="mb-4">
+                            <h3 class="h6 text-info-emphasis">Reflection questions</h3>
+                            <ul class="text-white-50 mb-0">
+                                @foreach (var item in Model.CoachingResult.ReflectionQuestions)
                                 {
                                     <li class="mb-2">@item</li>
                                 }

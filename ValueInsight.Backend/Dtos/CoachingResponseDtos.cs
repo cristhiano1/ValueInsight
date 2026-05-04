@@ -23,6 +23,7 @@
         public List<string> GoalSuggestions { get; set; } = new();
 
         public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
+        public List<string> ReflectionQuestions { get; set; } = new();
     }
 
     public class TeamCoachingResponseDtos

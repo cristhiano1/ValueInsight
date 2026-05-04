@@ -107,7 +107,7 @@
                         <div>
                             <h3 class="h6 text-info-emphasis">Detailed AI advice</h3>
                             <div class="text-white-50">
-                                @Html.Raw(Model.CoachingResult.AICoachingAdvice)
+                                @Html.Raw(FormatCoachingText(Model.CoachingResult.AICoachingAdvice))
                             </div>
                         </div>
                     }
@@ -123,6 +123,32 @@
 </section>
 
 @functions {
+public string FormatCoachingText(string text)
+{
+    if (string.IsNullOrWhiteSpace(text)) return "";
+
+    var encoded = System.Net.WebUtility.HtmlEncode(text);
+
+    // Convert **bold titles**
+    encoded = System.Text.RegularExpressions.Regex.Replace(
+        encoded,
+        @"\*\*(.*?)\*\*",
+        "<span class=\"coach-heading\">$1</span>"
+    );
+
+    // Remove numbering (1. 2. etc.)
+    encoded = System.Text.RegularExpressions.Regex.Replace(
+        encoded,
+        @"^\d+\.\s*",
+        "",
+        System.Text.RegularExpressions.RegexOptions.Multiline
+    );
+
+    return encoded.Replace("\n", "<br />");
+}
+}
+
+@* @functions {
     public string FormatCoachingText(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return "";
@@ -138,3 +164,9 @@
         return encoded.Replace("\n", "<br />");
     }
 }
+
+
+ *@
+
+
+   

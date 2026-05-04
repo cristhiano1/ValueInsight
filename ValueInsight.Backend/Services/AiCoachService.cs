@@ -113,39 +113,88 @@ namespace ValueInsight.Backend.Services
                 response.AlignmentLevel = "Critical Alignment Risk";
         }
 
+        //private void AnalyzeStrengths(CoachingResponseDtos response, List<string>? values)
+        //{
+        //    if (values == null) return;
+
+        //    foreach (var value in values.Distinct(StringComparer.OrdinalIgnoreCase))
+        //    {
+        //        switch (value)
+        //        {
+        //            case "Trust":
+        //                response.Strengths.Add("Builds strong interpersonal relationships within the team.");
+        //                break;
+        //            case "Transparency":
+        //                response.Strengths.Add("Encourages open communication and information sharing.");
+        //                break;
+        //            case "Innovation":
+        //                response.Strengths.Add("Promotes creative thinking and experimentation.");
+        //                break;
+        //            case "Respect":
+        //                response.Strengths.Add("Fosters psychological safety and inclusion.");
+        //                break;
+        //            case "Efficiency":
+        //            case "Resultatfokus":
+        //                response.Strengths.Add("Helps the team stay focused on delivery and follow-through.");
+        //                break;
+        //            case "Purpose":
+        //            case "Syfte":
+        //                response.Strengths.Add("Connects work to meaningful organizational goals.");
+        //                break;
+        //            default:
+        //                response.Strengths.Add($"Shows strong alignment with value: {value}");
+        //                break;
+        //        }
+        //    }
+        //}
         private void AnalyzeStrengths(CoachingResponseDtos response, List<string>? values)
         {
-            if (values == null) return;
-
-            foreach (var value in values.Distinct(StringComparer.OrdinalIgnoreCase))
+            if (values == null || !values.Any())
             {
-                switch (value)
-                {
-                    case "Trust":
-                        response.Strengths.Add("Builds strong interpersonal relationships within the team.");
-                        break;
-                    case "Transparency":
-                        response.Strengths.Add("Encourages open communication and information sharing.");
-                        break;
-                    case "Innovation":
-                        response.Strengths.Add("Promotes creative thinking and experimentation.");
-                        break;
-                    case "Respect":
-                        response.Strengths.Add("Fosters psychological safety and inclusion.");
-                        break;
-                    case "Efficiency":
-                    case "Resultatfokus":
-                        response.Strengths.Add("Helps the team stay focused on delivery and follow-through.");
-                        break;
-                    case "Purpose":
-                    case "Syfte":
-                        response.Strengths.Add("Connects work to meaningful organizational goals.");
-                        break;
-                    default:
-                        response.Strengths.Add($"Shows strong alignment with value: {value}");
-                        break;
-                }
+                response.Strengths.Add("Your selected values can be used as a starting point for understanding your leadership strengths and behavior.");
+                return;
             }
+
+            foreach (var value in values.Distinct(StringComparer.OrdinalIgnoreCase).Take(3))
+            {
+                response.Strengths.Add(BuildCategoryBasedStrength(value));
+            }
+        }
+        private static string BuildCategoryBasedStrength(string value)
+        {
+            var normalized = value.Trim().ToLowerInvariant();
+
+            if (new[] { "trust", "tillit", "respect", "respekt", "empathy", "empati", "care", "omtanke", "collaboration", "samarbete", "openness", "öppenhet", "transparency", "transparens", "loyalty", "lojalitet", "inclusion", "inkludering", "fairness", "rättvisa" }.Contains(normalized))
+            {
+                return $"{value} can help you build trust, collaboration, psychological safety, and stronger working relationships.";
+            }
+
+            if (new[] { "result focus", "resultatfokus", "efficiency", "effektivitet", "quality", "kvalitet", "responsibility", "ansvar", "performance drive", "prestationsdriv", "decisiveness", "beslutsamhet", "clarity", "tydlighet", "discipline", "disciplin", "competitiveness", "konkurrenskraft", "reliability", "pålitlighet" }.Contains(normalized))
+            {
+                return $"{value} can help you create direction, ownership, delivery focus, and reliable follow-through.";
+            }
+
+            if (new[] { "structure", "struktur", "planning", "planering", "predictability", "förutsägbarhet", "safety", "säkerhet", "consistency", "konsekvens", "order", "ordning", "long-term thinking", "långsiktighet", "stability", "stabilitet", "control", "kontroll", "accountability structure", "ansvarsstruktur" }.Contains(normalized))
+            {
+                return $"{value} can help you create clarity, stability, predictability, and safer decision-making.";
+            }
+
+            if (new[] { "freedom", "frihet", "independence", "självständighet", "flexibility", "flexibilitet", "courage", "mod", "integrity", "integritet", "self-expression", "självuttryck", "autonomy", "oberoende", "initiative", "initiativ", "authenticity", "autenticitet", "agency", "handlingskraft" }.Contains(normalized))
+            {
+                return $"{value} can help you take initiative, act independently, and create flexible solutions.";
+            }
+
+            if (new[] { "learning", "lärande", "innovation", "kreativitet", "creativity", "förändringsvilja", "curiosity", "nyfikenhet", "improvement", "förbättring", "vision", "tillväxt", "growth", "experimenting", "experimenterande", "challenge", "utmaning" }.Contains(normalized))
+            {
+                return $"{value} can help you learn, adapt, explore new ideas, and improve continuously.";
+            }
+
+            if (new[] { "purpose", "syfte", "social responsibility", "samhällsansvar", "sustainability", "hållbarhet", "ethics", "etik", "servant leadership", "tjänande ledarskap", "impact", "påverkan", "passion", "engagemang", "commitment", "balance", "balans" }.Contains(normalized))
+            {
+                return $"{value} can help you connect daily work to meaning, responsibility, engagement, and long-term impact.";
+            }
+
+            return $"{value} can become a strength when it is translated into clear, observable behavior in daily work.";
         }
 
         private void GenerateBaseRecommendations(CoachingResponseDtos response, CoachingRequestDtos request)
@@ -182,6 +231,46 @@ namespace ValueInsight.Backend.Services
 
             if (request.TeamTensionFields.Any())
                 response.CoachingRecommendations.Add($"Explore the main team tension field: {request.TeamTensionFields.First()}.");
+        }
+        private void BuildReflectionQuestions(CoachingResponseDtos response, CoachingRequestDtos request)
+        {
+            var topValue = request.DominantValues?.FirstOrDefault() ?? "your top value";
+            var tension = request.TeamTensionFields?.FirstOrDefault();
+            
+            response.ReflectionQuestions.Add(
+                $"You have stated \"{topValue}\" as a core value. How is this reflected in your leadership right now?"
+            );
+
+            // 1. Value-based question
+            response.ReflectionQuestions.Add(
+                $"How does your top value \"{topValue}\" show up in your behavior this week?"
+            );
+                       
+            // 2. Team vs individual
+            response.ReflectionQuestions.Add(
+                "Where do you feel aligned with your team’s way of working, and where do you feel friction?"
+            );
+
+            // 3. Energy / adaptation
+            response.ReflectionQuestions.Add(
+                "Where are you adapting well, and where are you losing energy in the current team culture?"
+            );
+
+            // 4. Tension-based (only if exists)
+            if (!string.IsNullOrWhiteSpace(tension) && !tension.Contains("No"))
+            {
+                response.ReflectionQuestions.Add(
+                    $"How does the tension \"{tension}\" show up in your daily work?"
+                );
+            }
+
+            // 5. Goal-value connection
+            if (!string.IsNullOrWhiteSpace(request.CurrentGoal))
+            {
+                response.ReflectionQuestions.Add(
+                    $"How does your current goal support \"{topValue}\" in a visible way?"
+                );
+            }
         }
 
         private void BuildGoalSuggestions(CoachingResponseDtos response, CoachingRequestDtos request)
@@ -462,13 +551,50 @@ Run a short workshop where the team defines one behavior to keep, one tension to
             return strengths;
         }
 
+        //private static List<string> BuildTeamRisks(TeamCoachingRequestDtos request)
+        //{
+        //    var risks = new List<string>();
+        //    if (request.PolarizationScore >= 60) risks.Add("Polarization is high enough to create hidden friction or competing expectations.");
+        //    if (request.TensionFields.Any()) risks.Add($"The clearest tension field is {request.TensionFields.First()}.");
+        //    if (request.CompletedMembers < request.TotalMembers) risks.Add("Participation is incomplete, so the culture picture may still shift.");
+        //    if (!risks.Any()) risks.Add("No critical culture risk stands out yet, but watch for drift between values and behavior.");
+        //    return risks;
+        //}
         private static List<string> BuildTeamRisks(TeamCoachingRequestDtos request)
         {
             var risks = new List<string>();
-            if (request.PolarizationScore >= 60) risks.Add("Polarization is high enough to create hidden friction or competing expectations.");
-            if (request.TensionFields.Any()) risks.Add($"The clearest tension field is {request.TensionFields.First()}.");
-            if (request.CompletedMembers < request.TotalMembers) risks.Add("Participation is incomplete, so the culture picture may still shift.");
-            if (!risks.Any()) risks.Add("No critical culture risk stands out yet, but watch for drift between values and behavior.");
+
+            if (request.AlignmentScore < 50)
+            {
+                risks.Add("Low alignment suggests the team may have unclear shared expectations or inconsistent ways of working.");
+            }
+
+            if (request.PolarizationScore >= 60)
+            {
+                risks.Add("High polarization may create hidden friction, competing expectations, or difficulty agreeing on priorities.");
+            }
+
+            if (request.CompletedMembers < request.TotalMembers)
+            {
+                risks.Add("Participation is incomplete, so the culture picture may still shift when more members complete the mapping.");
+            }
+
+            if (!request.SharedCoreValues.Any())
+            {
+                risks.Add("Few clearly shared values may make it harder for the team to build a common culture language.");
+            }
+
+            if (request.TensionFields.Any() &&
+                !request.TensionFields.First().Contains("No Value conflicts", StringComparison.OrdinalIgnoreCase))
+            {
+                risks.Add($"A potential value tension may need attention: {request.TensionFields.First()}.");
+            }
+
+            if (!risks.Any())
+            {
+                risks.Add("No critical culture risk stands out yet, but the team should continue checking whether stated values match everyday behavior.");
+            }
+
             return risks;
         }
 
@@ -492,8 +618,38 @@ Run a short workshop where the team defines one behavior to keep, one tension to
             };
         }
 
-        public CoachingResponseDtos GenerateFallbackCoaching(CoachingRequestDtos request)
+        //public CoachingResponseDtos GenerateFallbackCoaching(CoachingRequestDtos request)
+        //{
+        //    var response = new CoachingResponseDtos
+        //    {
+        //        UserId = request.UserId,
+        //        TeamId = request.TeamId,
+        //        AlignmentScore = request.AlignmentScore,
+        //        Strengths = new List<string>(),
+        //        DevelopmentAreas = new List<string>(),
+        //        CoachingRecommendations = new List<string>(),
+        //        GoalSuggestions = new List<string>()
+        //    };
+
+        //    DetermineAlignmentLevel(response);
+        //    AnalyzeStrengths(response, request.DominantValues);
+        //    GenerateBaseRecommendations(response, request);
+        //    BuildGoalSuggestions(response, request);
+
+        //    response.AICoachingAdvice = BuildDeterministicFallbackAdvice(request, response);
+        //    response.AIEnhanced = false;
+
+        //    return response;
+        //}
+
+        public Task<CoachingResponseDtos> GenerateFallbackCoachingAsync(CoachingRequestDtos request)
         {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.AlignmentScore < 0 || request.AlignmentScore > 100)
+                throw new ArgumentException("Alignment score must be between 0 and 100.");
+
             var response = new CoachingResponseDtos
             {
                 UserId = request.UserId,
@@ -502,18 +658,20 @@ Run a short workshop where the team defines one behavior to keep, one tension to
                 Strengths = new List<string>(),
                 DevelopmentAreas = new List<string>(),
                 CoachingRecommendations = new List<string>(),
-                GoalSuggestions = new List<string>()
+                GoalSuggestions = new List<string>(),
+                ReflectionQuestions = new List<string>(),
             };
 
+            // Determine alignment level and populate deterministic advice
             DetermineAlignmentLevel(response);
             AnalyzeStrengths(response, request.DominantValues);
             GenerateBaseRecommendations(response, request);
             BuildGoalSuggestions(response, request);
-
+            BuildReflectionQuestions(response, request);
             response.AICoachingAdvice = BuildDeterministicFallbackAdvice(request, response);
             response.AIEnhanced = false;
 
-            return response;
+            return Task.FromResult(response);
         }
 
         public TeamCoachingResponseDtos GenerateFallbackTeamCoaching(TeamCoachingRequestDtos request)

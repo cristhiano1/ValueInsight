@@ -123,6 +123,7 @@ public class CoachingResponseViewModel
     public List<string> CoachingRecommendations { get; set; } = new();
     public List<string> GoalSuggestions { get; set; } = new();
     public DateTime GeneratedAt { get; set; }
+    public List<string> ReflectionQuestions { get; set; } = new();
 }
 public class CoachingPromptsPageViewModel
 {
