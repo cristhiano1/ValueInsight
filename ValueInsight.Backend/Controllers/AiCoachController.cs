@@ -68,16 +68,7 @@ public class AiCoachController : ControllerBase
             return StatusCode(500, "Internal server error");
         }
     }
-    //[HttpPost("fallback")]
-    //public ActionResult<CoachingResponseDtos> GenerateFallbackCoaching([FromBody] CoachingRequestDtos request)
-    //{
-    //    if (!ModelState.IsValid)
-    //        return BadRequest(ModelState);
-
-    //    var result = _aiCoachService.GenerateFallbackCoaching(request);
-    //    return Ok(result);
-    //}
-
+    
     [HttpPost("fallback")]
     public async Task<ActionResult<CoachingResponseDtos>> GenerateFallbackCoaching([FromBody] CoachingRequestDtos request)
     {

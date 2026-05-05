@@ -171,13 +171,13 @@ public class TeamCultureService
         if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.18 &&
             teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
         {
-            tensionFields.Add("Flexibility vs Planning – preferences for structure vs adaptability may vary.");
+            tensionFields.Add("Freedom vs Stability – preferences for structure vs adaptability may vary.");
         }
 
         if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.18 &&
             teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
         {
-            tensionFields.Add("Experimentation vs Consistency – trying new things vs following routines may create friction.");
+            tensionFields.Add("Innovation vs Stability – trying new things vs following routines may create friction.");
         }
 
         if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.18 &&

@@ -113,40 +113,7 @@ namespace ValueInsight.Backend.Services
                 response.AlignmentLevel = "Critical Alignment Risk";
         }
 
-        //private void AnalyzeStrengths(CoachingResponseDtos response, List<string>? values)
-        //{
-        //    if (values == null) return;
-
-        //    foreach (var value in values.Distinct(StringComparer.OrdinalIgnoreCase))
-        //    {
-        //        switch (value)
-        //        {
-        //            case "Trust":
-        //                response.Strengths.Add("Builds strong interpersonal relationships within the team.");
-        //                break;
-        //            case "Transparency":
-        //                response.Strengths.Add("Encourages open communication and information sharing.");
-        //                break;
-        //            case "Innovation":
-        //                response.Strengths.Add("Promotes creative thinking and experimentation.");
-        //                break;
-        //            case "Respect":
-        //                response.Strengths.Add("Fosters psychological safety and inclusion.");
-        //                break;
-        //            case "Efficiency":
-        //            case "Resultatfokus":
-        //                response.Strengths.Add("Helps the team stay focused on delivery and follow-through.");
-        //                break;
-        //            case "Purpose":
-        //            case "Syfte":
-        //                response.Strengths.Add("Connects work to meaningful organizational goals.");
-        //                break;
-        //            default:
-        //                response.Strengths.Add($"Shows strong alignment with value: {value}");
-        //                break;
-        //        }
-        //    }
-        //}
+        
         private void AnalyzeStrengths(CoachingResponseDtos response, List<string>? values)
         {
             if (values == null || !values.Any())
@@ -551,15 +518,6 @@ Run a short workshop where the team defines one behavior to keep, one tension to
             return strengths;
         }
 
-        //private static List<string> BuildTeamRisks(TeamCoachingRequestDtos request)
-        //{
-        //    var risks = new List<string>();
-        //    if (request.PolarizationScore >= 60) risks.Add("Polarization is high enough to create hidden friction or competing expectations.");
-        //    if (request.TensionFields.Any()) risks.Add($"The clearest tension field is {request.TensionFields.First()}.");
-        //    if (request.CompletedMembers < request.TotalMembers) risks.Add("Participation is incomplete, so the culture picture may still shift.");
-        //    if (!risks.Any()) risks.Add("No critical culture risk stands out yet, but watch for drift between values and behavior.");
-        //    return risks;
-        //}
         private static List<string> BuildTeamRisks(TeamCoachingRequestDtos request)
         {
             var risks = new List<string>();
@@ -617,30 +575,6 @@ Run a short workshop where the team defines one behavior to keep, one tension to
                 "Set one team goal and explicitly connect it to one shared core value."
             };
         }
-
-        //public CoachingResponseDtos GenerateFallbackCoaching(CoachingRequestDtos request)
-        //{
-        //    var response = new CoachingResponseDtos
-        //    {
-        //        UserId = request.UserId,
-        //        TeamId = request.TeamId,
-        //        AlignmentScore = request.AlignmentScore,
-        //        Strengths = new List<string>(),
-        //        DevelopmentAreas = new List<string>(),
-        //        CoachingRecommendations = new List<string>(),
-        //        GoalSuggestions = new List<string>()
-        //    };
-
-        //    DetermineAlignmentLevel(response);
-        //    AnalyzeStrengths(response, request.DominantValues);
-        //    GenerateBaseRecommendations(response, request);
-        //    BuildGoalSuggestions(response, request);
-
-        //    response.AICoachingAdvice = BuildDeterministicFallbackAdvice(request, response);
-        //    response.AIEnhanced = false;
-
-        //    return response;
-        //}
 
         public Task<CoachingResponseDtos> GenerateFallbackCoachingAsync(CoachingRequestDtos request)
         {

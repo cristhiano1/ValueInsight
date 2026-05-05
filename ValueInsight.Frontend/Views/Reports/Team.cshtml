@@ -11,10 +11,6 @@
             <p class="text-white-50 mb-0">Team Leader: @(string.IsNullOrWhiteSpace(Model.LeaderName) ? "Not assigned" : Model.LeaderName)</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
-            @* <a class="btn btn-outline-light" asp-controller="Reports" asp-action="Personal">Personal report</a> *@
-           @*  <a class="btn vi-nav-cta" asp-controller="Reports" asp-action="TeamCoaching" asp-route-teamId="@Model.TeamId">Team coaching</a> *@
-            @* <a class="btn btn-outline-light" asp-controller="Dashboard" asp-action="Index">Dashboard</a> *@
-
             <a class="btn vi-nav-cta"
                asp-controller="Reports"
                asp-action="TeamCoaching"
@@ -98,7 +94,7 @@
                 }
                 else
                 {
-                    <p class="text-white-50">Shared value patterns are not available yet.</p>
+                    <p class="text-white-50">No shared values.</p>
                 }
 
                 <h3 class="h5 mb-3">Value Conflicts</h3>
@@ -237,11 +233,15 @@
             </div>
         </div>
     </div>
-    @* <div class="col-md-12">
+</section>
+   
+ 
+ @* <div class="col-md-12">
         <div class="vi-card-glass vi-card-glass--light p-3 h-100 text-center">
             <div class="small text-white-50">Participation</div>
             <div class="h3 mb-0">@Model.CompletedMembers / @Model.TotalMembers</div>
             <div class="small text-white-50">@(Model.AllowPartialReport ? "Partial reporting enabled" : "Full completion required")</div>
         </div>
     </div> *@
-</section>
+
+
