@@ -57,6 +57,66 @@
     </div>
 
     <div class="row g-4 mb-4">
+       
+        <div class="col-lg-6">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                    <h2 class="h5 mb-3">Frequency of values</h2>
+
+                    @if (Model.ValueFrequency != null && Model.ValueFrequency.Any())
+                    {
+                        var groupedCategories = Model.ValueFrequency
+                        .GroupBy(v => v.Category)
+                        .OrderByDescending(g => g.Sum(x => x.Rank))
+                        .ToList();
+
+                        <div class="accordion" id="valueFrequencyAccordion">
+                            @for (int i = 0; i < groupedCategories.Count; i++)
+                            {
+                                var categoryGroup = groupedCategories[i];
+                                var collapseId = $"collapse-category-{i}";
+                                var headingId = $"heading-category-{i}";
+                                var totalCount = categoryGroup.Sum(x => x.Rank);
+
+                                <div class="accordion-item bg-transparent border-light border-opacity-10 mb-3">
+                                    <h2 class="accordion-header" id="@headingId">
+                                        <button class="accordion-button collapsed bg-transparent text-white shadow-none"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#@collapseId"
+                                                aria-expanded="false"
+                                                aria-controls="@collapseId">
+                                            <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                                                <span class="fw-semibold">@categoryGroup.Key</span>
+                                                <span class="text-white-50 small">Total count: @totalCount</span>
+                                            </div>
+                                        </button>
+                                    </h2>
+
+                                    <div id="@collapseId"
+                                         class="accordion-collapse collapse"
+                                         aria-labelledby="@headingId"
+                                         data-bs-parent="#valueFrequencyAccordion">
+                                        <div class="accordion-body pt-2">
+                                            @foreach (var item in categoryGroup.OrderByDescending(x => x.Rank).ThenBy(x => x.Name))
+                                            {
+                                                <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                                                    <div>@item.Name</div>
+                                                    <div class="text-white-50">@item.Rank</div>
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-white-50 mb-0">Value frequency is not available yet.</p>
+                    }
+                </div>
+           
+        </div>
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Team top values</h2>
@@ -79,7 +139,33 @@
                 }
             </div>
         </div>
+    </div>
+        
+    <div class="row g-4 mb-4">
+        
+        <div class="col-lg-6">
+             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                  <h2 class="h5 mb-3">Most spread values</h2>
 
+                        @if (Model.MostSpreadValues.Any())
+                        {
+                            @foreach (var item in Model.MostSpreadValues)
+                            {
+                                <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                                    <div>
+                                        <div class="fw-semibold">@item.Name</div>
+                                        <div class="small text-white-50">@item.Category</div>
+                                    </div>
+                                    <div class="text-white-50">Spread: @item.SpreadScore.ToString("0.00")</div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-white-50 mb-0">No strongly spread values detected yet.</p>
+                        }
+             </div>
+        </div>
         <div class="col-lg-6">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Shared core values</h2>
@@ -96,8 +182,14 @@
                 {
                     <p class="text-white-50">No shared values.</p>
                 }
+            </div>
+        </div>
+    </div>
+    <div class="row g-4 mb-4">
 
-                <h3 class="h5 mb-3">Value Conflicts</h3>
+        <div class="col-lg-12">
+          <div class="vi-card-glass vi-card-glass--light p-4">
+              <h3 class="h5 mb-3">Value Conflicts</h3>
                 @if (Model.TensionFields.Any())
                 {
                     <ul class="mb-0 text-white-50">
@@ -111,75 +203,68 @@
                 {
                     <p class="text-white-50 mb-0">No conflicts identified.</p>
                 }
-            </div>
+          </div>
         </div>
+          
     </div>
-    <div class="row g-4 mb-4">
+    
+           
         
+    @* <div class="row g-4 mb-4">
         <div class="col-lg-12">
-            <div class="vi-card-glass vi-card-glass--light p-4">
-                <h2 class="h5 mb-3">Value frequency by category</h2>
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Who ranks what highest?</h2>
 
-                @if (Model.ValueFrequency != null && Model.ValueFrequency.Any())
+                @if (Model.MemberTopValues.Any())
                 {
-                    var groupedCategories = Model.ValueFrequency
-                    .GroupBy(v => v.Category)
-                    .OrderByDescending(g => g.Sum(x => x.Rank))
-                    .ToList();
-
-                    <div class="accordion" id="valueFrequencyAccordion">
-                        @for (int i = 0; i < groupedCategories.Count; i++)
-                        {
-                            var categoryGroup = groupedCategories[i];
-                            var collapseId = $"collapse-category-{i}";
-                            var headingId = $"heading-category-{i}";
-                            var totalCount = categoryGroup.Sum(x => x.Rank);
-
-                            <div class="accordion-item bg-transparent border-light border-opacity-10 mb-3">
-                                <h2 class="accordion-header" id="@headingId">
-                                    <button class="accordion-button collapsed bg-transparent text-white shadow-none"
-                                            type="button"
-                                            data-bs-toggle="collapse"
-                                            data-bs-target="#@collapseId"
-                                            aria-expanded="false"
-                                            aria-controls="@collapseId">
-                                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
-                                            <span class="fw-semibold">@categoryGroup.Key</span>
-                                            <span class="text-white-50 small">Total count: @totalCount</span>
-                                        </div>
-                                    </button>
-                                </h2>
-
-                                <div id="@collapseId"
-                                     class="accordion-collapse collapse"
-                                     aria-labelledby="@headingId"
-                                     data-bs-parent="#valueFrequencyAccordion">
-                                    <div class="accordion-body pt-2">
-                                        @foreach (var item in categoryGroup.OrderByDescending(x => x.Rank).ThenBy(x => x.Name))
-                                        {
-                                            <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
-                                                <div>@item.Name</div>
-                                                <div class="text-white-50">@item.Rank</div>
-                                            </div>
-                                        }
-                                    </div>
-                                </div>
-                            </div>
-                        }
-                    </div>
+                    @foreach (var member in Model.MemberTopValues)
+                    {
+                        <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+                            <div class="fw-semibold">@member.UserName</div>
+                            <div class="text-white-50">@string.Join(", ", member.TopValues)</div>
+                        </div>
+                    }
                 }
                 else
                 {
-                    <p class="text-white-50 mb-0">Value frequency is not available yet.</p>
+                    <p class="text-white-50 mb-0">Member ranking data is not available yet.</p>
                 }
             </div>
         </div>
-
-    </div>
-
+    </div> *@
     <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="vi-card-glass vi-card-glass--light p-4">
+        <div class="col-lg-12">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
+                <h2 class="h5 mb-3">Who ranks top values?</h2>
+
+                @if (Model.ValueOwners.Any())
+                {
+                    @foreach (var item in Model.ValueOwners)
+                    {
+                        <div class="d-flex justify-content-between border-bottom border-light border-opacity-10 py-2">
+
+                            <div>
+                                <div class="fw-semibold">@item.ValueName</div>
+                                <div class="small text-white-50">@item.Category</div>
+                            </div>
+
+                            <div class="text-white-50">
+                                @string.Join(", ", item.Users)
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-white-50 mb-0">No value priority data available.</p>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4 mb-4">
+        <div class="col-lg-12">
+            <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <h2 class="h5 mb-3">Team history</h2>
                 
                 @if (Model.History.Any())
@@ -191,8 +276,26 @@
                                 <div class="fw-semibold">@item.SnapshotDateUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
                                 <div class="text-white-50">Coverage: @item.TeamSize member(s)</div>
                             </div>
-                            <div class="small text-white-50 mb-1">Culture type: @item.CultureType</div>
-                            <div class="small text-white-50 mb-1">Alignment: @item.AlignmentScore.ToString("0.0")% · Polarization: @item.PolarizationScore.ToString("0.0")% · Maturity: @item.MaturityIndex.ToString("0.0")</div>
+                            <div class="text-white-50 mb-1 fs-6">Culture type: @item.CultureType</div>
+                            @* <div class="small text-white-50 mb-1">Alignment: @item.AlignmentScore.ToString("0.0")% · Polarization: @item.PolarizationScore.ToString("0.0")% · Maturity: @item.MaturityIndex.ToString("0.0")</div> *@
+                            @{
+                                var currentIndex = Model.History.IndexOf(item);
+                                var previousItem = currentIndex < Model.History.Count - 1
+                                ? Model.History[currentIndex + 1]
+                                : null;
+
+                                string spreadTrend = previousItem != null
+                                ? GetSpreadTrend(previousItem.PolarizationScore, item.PolarizationScore)
+                                : "—";
+                            }
+
+                            <div class="text-white-50 mb-1 fs-6">
+                                Alignment: @item.AlignmentScore.ToString("0.0")%
+                                · Polarization: @item.PolarizationScore.ToString("0.0")%
+                                · Values Spread: @GetValueSpreadLabel(item.PolarizationScore)
+                                · Spread Trend: @spreadTrend
+                                · Maturity: @item.MaturityIndex.ToString("0.0")
+                            </div>
                             <div class="text-white-50">Top values: @string.Join(", ", item.TopValues)</div>
                         </div>
                     }
@@ -205,7 +308,7 @@
         </div>
     </div>
 
-    <div class="row g-4">
+    @* <div class="row g-4">
         <div class="col-lg-12">
             <div class="vi-card-glass vi-card-glass--light p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -232,8 +335,34 @@
                 }
             </div>
         </div>
-    </div>
+    </div> *@
 </section>
+
+@functions {
+    public string GetValueSpreadLabel(double polarizationScore)
+    {
+        if (polarizationScore >= 60)
+            return "High";
+
+        if (polarizationScore >= 30)
+            return "Moderate";
+
+        return "Low";
+    }
+
+    public string GetSpreadTrend(double previous, double current)
+    {
+        var diff = current - previous;
+
+        if (Math.Abs(diff) < 2)
+            return "Stable";
+
+        if (diff > 0)
+            return "Increased";
+
+        return "Decreased";
+    }
+}
    
  
  @* <div class="col-md-12">

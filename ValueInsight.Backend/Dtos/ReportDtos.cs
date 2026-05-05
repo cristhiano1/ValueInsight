@@ -13,6 +13,26 @@ public class RankedValueDto
     public string Category { get; set; } = string.Empty;
     public int Rank { get; set; }
 }
+public class SpreadValueDto
+{
+    public int ValueId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public double SpreadScore { get; set; }
+}
+public class ValueOwnerDto
+{
+    public string ValueName { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public List<string> Users { get; set; } = new();
+}
+
+public class MemberTopValueDto
+{
+    public int UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public List<string> TopValues { get; set; } = new();
+}
 
 public class ReflectionInsightDto
 {
@@ -46,6 +66,7 @@ public class AssessmentHistoryItemDto
     public List<CategoryScoreDto> CategoryProfile { get; set; } = new();
     public List<ReflectionInsightDto> ReflectionInsights { get; set; } = new();
     public List<AssessmentQuestionAnswerDto> ReflectionQuestions { get; set; } = new();
+    
 }
 
 public class TeamHistoryItemDto
@@ -116,6 +137,9 @@ public class TeamReportDto
     public List<TeamHistoryItemDto> History { get; set; } = new();
     public TeamHistorySummaryDto? HistorySummary { get; set; }
     public List<TeamMemberProgressDto> Members { get; set; } = new();
+    public List<SpreadValueDto> MostSpreadValues { get; set; } = new();
+    public List<MemberTopValueDto> MemberTopValues { get; set; } = new();
+    public List<ValueOwnerDto> ValueOwners { get; set; } = new();
 }
 
 public class DashboardDto

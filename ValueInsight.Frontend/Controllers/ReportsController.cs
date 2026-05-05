@@ -50,8 +50,22 @@ public class ReportsController : Controller
         model.HistorySummary ??= new TeamHistorySummaryViewModel();
         model.HistorySummary.PreviousTopValues ??= new();
         model.HistorySummary.CurrentTopValues ??= new();
+        model.MostSpreadValues ??= new();
+        model.MemberTopValues ??= new();
+
+        foreach (var item in model.MemberTopValues)
+        {
+            item.TopValues ??= new();
+        }
+        model.ValueOwners ??= new();
+
+        foreach (var item in model.ValueOwners)
+        {
+            item.Users ??= new();
+        }
 
         return model;
+        
     }
 
     private static CoachingResponseViewModel NormalizeCoachingResponse(CoachingResponseViewModel model)
