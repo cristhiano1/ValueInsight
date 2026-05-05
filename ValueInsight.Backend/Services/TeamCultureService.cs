@@ -97,10 +97,39 @@ public class TeamCultureService
             ValueFrequency = teamMetrics.ValueFrequency,
             SharedCoreValues = teamMetrics.SharedCoreValues,
             TensionFields = tensionFields,
+            MostSpreadValues = CalculateMostSpreadValues(usersWithValues),
+            MemberTopValues = CalculateMemberTopValues(usersWithValues),
             History = history,
             HistorySummary = historySummary,
-            Members = memberProgress
+            Members = memberProgress,
+            ValueOwners = BuildValueOwners(usersWithValues),
+
         };
+    }
+    private static List<ValueOwnerDto> BuildValueOwners(List<User> usersWithValues)
+    {
+        var result = usersWithValues
+            .SelectMany(user =>
+                user.UserValues
+                    .Where(v => v.Rank == 1) // ONLY top value
+                    .Select(v => new
+                    {
+                        UserName = user.Name,
+                        ValueName = v.Value.Name,
+                        Category = CultureAnalysisHelper.ToDisplayName(v.Value.Category)
+                    }))
+            .GroupBy(x => new { x.ValueName, x.Category })
+            .Select(g => new ValueOwnerDto
+            {
+                ValueName = g.Key.ValueName,
+                Category = g.Key.Category,
+                Users = g.Select(x => x.UserName).OrderBy(x => x).ToList()
+            })
+            .OrderByDescending(x => x.Users.Count)
+            .ThenBy(x => x.ValueName)
+            .ToList();
+
+        return result;
     }
 
     private static TeamMetrics BuildMetricsFromUserValues(List<User> usersWithValues, List<UserValue> allUserValues)
@@ -133,9 +162,21 @@ public class TeamCultureService
         var alignment = CultureAnalysisHelper.CalculateAlignmentScore(top5Lists);
         var polarization = CultureAnalysisHelper.CalculatePolarization(teamProfile);
         var maturity = CultureAnalysisHelper.CalculateMaturityIndex(alignment, polarization, teamProfile);
-        var sharedValues = valueFrequency.Where(v => v.Rank == usersWithValues.Count && usersWithValues.Count > 0)
-            .Select(v => v.Name)
-            .ToList();
+        //var sharedValues = valueFrequency.Where(v => v.Rank == usersWithValues.Count && usersWithValues.Count > 0)
+        //    .Select(v => v.Name)
+        //    .ToList();
+        var sharedThreshold = usersWithValues.Count <= 2
+    ? usersWithValues.Count
+    : Math.Max(2, (int)Math.Ceiling(usersWithValues.Count * 0.6));
+        var sharedValues = usersWithValues.Count > 0
+    ? valueFrequency
+        .Where(v => v.Rank >= sharedThreshold)
+        .OrderByDescending(v => v.Rank)
+        .ThenBy(v => v.Name)
+        .Take(3)
+        .Select(v => $"{v.Name} ({v.Rank} member{(v.Rank == 1 ? "" : "s")})")
+        .ToList()
+    : new List<string>();
 
         return new TeamMetrics
         {
@@ -155,6 +196,77 @@ public class TeamCultureService
             SharedCoreValues = sharedValues
         };
     }
+    private static List<SpreadValueDto> CalculateMostSpreadValues(List<User> usersWithValues)
+    {
+        if (!usersWithValues.Any())
+            return new List<SpreadValueDto>();
+
+        var allValues = usersWithValues
+            .SelectMany(u => u.UserValues)
+            .GroupBy(uv => uv.ValueId)
+            .Select(g => new
+            {
+                ValueId = g.Key,
+                Name = g.First().Value.Name,
+                Category = CultureAnalysisHelper.ToDisplayName(g.First().Value.Category)
+            })
+            .ToList();
+
+        var notSelectedRank = 6;
+
+        return allValues
+            .Select(value =>
+            {
+                var ranks = usersWithValues
+                    .Select(user =>
+                    {
+                        var selected = user.UserValues.FirstOrDefault(uv => uv.ValueId == value.ValueId);
+                        return selected?.Rank ?? notSelectedRank;
+                    })
+                    .ToList();
+
+                return new SpreadValueDto
+                {
+                    ValueId = value.ValueId,
+                    Name = value.Name,
+                    Category = value.Category,
+                    SpreadScore = Math.Round(CalculateStandardDeviation(ranks), 2)
+                };
+            })
+            .Where(x => x.SpreadScore > 0)
+            .OrderByDescending(x => x.SpreadScore)
+            .ThenBy(x => x.Name)
+            .Take(5)
+            .ToList();
+    }
+
+    private static double CalculateStandardDeviation(List<int> values)
+    {
+        if (values.Count <= 1)
+            return 0;
+
+        var average = values.Average();
+        var variance = values.Sum(v => Math.Pow(v - average, 2)) / values.Count;
+
+        return Math.Sqrt(variance);
+    }
+
+    private static List<MemberTopValueDto> CalculateMemberTopValues(List<User> usersWithValues)
+    {
+        return usersWithValues
+            .OrderBy(u => u.Name)
+            .Select(user => new MemberTopValueDto
+            {
+                UserId = user.Id,
+                UserName = user.Name,
+                TopValues = user.UserValues
+                    .OrderBy(uv => uv.Rank)
+                    .Take(3)
+                    .Select(uv => uv.Value.Name)
+                    .ToList()
+            })
+            .ToList();
+    }
 
     private static List<string> BuildTensionFields(Dictionary<ValueCategory, double> teamProfile)
     {
@@ -171,13 +283,13 @@ public class TeamCultureService
         if (teamProfile.GetValueOrDefault(ValueCategory.AutonomyAndFreedom) >= 0.18 &&
             teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
         {
-            tensionFields.Add("Flexibility vs Planning – preferences for structure vs adaptability may vary.");
+            tensionFields.Add("Freedom vs Stability – preferences for structure vs adaptability may vary.");
         }
 
         if (teamProfile.GetValueOrDefault(ValueCategory.DevelopmentAndInnovation) >= 0.18 &&
             teamProfile.GetValueOrDefault(ValueCategory.StructureAndStability) >= 0.18)
         {
-            tensionFields.Add("Experimentation vs Consistency – trying new things vs following routines may create friction.");
+            tensionFields.Add("Innovation vs Stability – trying new things vs following routines may create friction.");
         }
 
         if (teamProfile.GetValueOrDefault(ValueCategory.ResultAndPerformance) >= 0.18 &&

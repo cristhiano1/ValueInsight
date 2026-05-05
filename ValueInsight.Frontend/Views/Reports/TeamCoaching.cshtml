@@ -6,14 +6,13 @@
 <section class="container py-5 text-white">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
         <div>
-            <div class="vi-badge mb-3">AI team coaching</div>
+            <div class="vi-badge mb-3">Team coaching</div>
             <h1 class="mb-2">Team coaching for @Model.TeamReport.TeamName</h1>
             <p class="text-white-50 mb-0">Culture interpretation, risks, leadership advice, and suggested interventions for the team.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <a class="btn btn-outline-light" asp-action="Team" asp-route-teamId="@Model.TeamReport.TeamId">Back to team report</a>
-            @* <a class="btn btn-outline-light" asp-action="Personal">Personal report</a>
-            <a class="btn vi-nav-cta" asp-controller="Dashboard" asp-action="Index">Dashboard</a> *@
+            
         </div>
     </div>
 
@@ -91,9 +90,18 @@
                             </ul>
                         </div>
                     }
- 
+                 
                     
-                    @if (!string.IsNullOrWhiteSpace(Model.CoachingResult.AICoachingAdvice))
+                    @* @if (!string.IsNullOrWhiteSpace(Model.CoachingResult.AICoachingAdvice))
+                    {
+                        <div>
+                            <h3 class="h6 text-info-emphasis">Detailed AI advice</h3>
+                            <div class="text-white-50">
+                                @Html.Raw(FormatCoachingText(Model.CoachingResult.AICoachingAdvice))
+                            </div>
+                        </div>
+                    } *@
+                    @if (Model.CoachingResult.AIEnhanced && !string.IsNullOrWhiteSpace(Model.CoachingResult.AICoachingAdvice))
                     {
                         <div>
                             <h3 class="h6 text-info-emphasis">Detailed AI advice</h3>
@@ -114,18 +122,31 @@
 </section>
 
 @functions {
-    public string FormatCoachingText(string text)
-    {
-        if (string.IsNullOrWhiteSpace(text)) return "";
+public string FormatCoachingText(string text)
+{
+    if (string.IsNullOrWhiteSpace(text)) return "";
 
-        var encoded = System.Net.WebUtility.HtmlEncode(text);
-               
-        encoded = System.Text.RegularExpressions.Regex.Replace(
-            encoded,
-            @"(\d+\.\s*)?([^:\n]+:)",
-            "<span class=\"coach-heading\">$1$2</span>"
-        );
+    var encoded = System.Net.WebUtility.HtmlEncode(text);
 
-        return encoded.Replace("\n", "<br />");
-    }
+    // Convert **bold titles**
+    encoded = System.Text.RegularExpressions.Regex.Replace(
+        encoded,
+        @"\*\*(.*?)\*\*",
+        "<span class=\"coach-heading\">$1</span>"
+    );
+
+    // Remove numbering (1. 2. etc.)
+    encoded = System.Text.RegularExpressions.Regex.Replace(
+        encoded,
+        @"^\d+\.\s*",
+        "",
+        System.Text.RegularExpressions.RegexOptions.Multiline
+    );
+
+    return encoded.Replace("\n", "<br />");
 }
+}
+
+
+
+   

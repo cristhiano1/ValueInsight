@@ -13,6 +13,26 @@ public class RankedValueViewModel
     public string Category { get; set; } = string.Empty;
     public int Rank { get; set; }
 }
+public class SpreadValueViewModel
+{
+    public int ValueId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public double SpreadScore { get; set; }
+}
+
+public class MemberTopValueViewModel
+{
+    public int UserId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public List<string> TopValues { get; set; } = new();
+}
+public class ValueOwnerViewModel
+{
+    public string ValueName { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public List<string> Users { get; set; } = new();
+}
 
 public class ReflectionInsightViewModel
 {
@@ -46,6 +66,7 @@ public class AssessmentHistoryItemViewModel
     public List<CategoryScoreViewModel> CategoryProfile { get; set; } = new();
     public List<ReflectionInsightViewModel> ReflectionInsights { get; set; } = new();
     public List<AssessmentQuestionAnswerViewModel> ReflectionQuestions { get; set; } = new();
+    
 }
 
 public class TeamHistoryItemViewModel
@@ -123,6 +144,7 @@ public class CoachingResponseViewModel
     public List<string> CoachingRecommendations { get; set; } = new();
     public List<string> GoalSuggestions { get; set; } = new();
     public DateTime GeneratedAt { get; set; }
+    public List<string> ReflectionQuestions { get; set; } = new();
 }
 public class CoachingPromptsPageViewModel
 {
@@ -160,6 +182,9 @@ public class TeamReportViewModel
     public List<TeamHistoryItemViewModel> History { get; set; } = new();
     public TeamHistorySummaryViewModel? HistorySummary { get; set; }
     public List<TeamMemberProgressViewModel> Members { get; set; } = new();
+    public List<SpreadValueViewModel> MostSpreadValues { get; set; } = new();
+    public List<MemberTopValueViewModel> MemberTopValues { get; set; } = new();
+    public List<ValueOwnerViewModel> ValueOwners { get; set; } = new();
 }
 
 public class TopValueReflectionInputViewModel
